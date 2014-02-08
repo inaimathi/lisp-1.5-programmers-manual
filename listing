@@ -1,0 +1,41 @@
+*
+****************** LISP 1.5 *******************
+*
+*    COPYRIGHT 1978 BY:
+*
+*    FRITS VAN DER WATEREN
+*    VAN 'T FOFFSTRAAT 140
+*    2014 RK  HAARLEM
+*    THE NETHERLANDS
+*
+*
+*
+*
+* LISP STARTS AT $100
+*      AND AUTOMATICALLY ALLOCATES all contiguous memory
+*      and reserves 7/8 for cell storage (4 bytes per cell)
+*      and 1/8 for stack (2 bytes per word)
+*
+* Restart is at $103
+*      the current oblist is mantained but the
+*      a-list bindings are lost.
+*      Furthermore a garbage collection is forced.
+*
+*
+* The device table is located at $106
+*      And can be extended by two more devices.
+*      Implemented handlers are:
+*      #1 TTY      With an ACIA at $FF00
+*      #2 READER   with a PIA at $FF10 (A)
+*      #3 PUNCH    with a PIA at $FF10 (B)
+*
+
+0000			ORG	0
+0000		NIL	RMB	4	ATOM NIL
+0004 		FWAM	RMB	2	FIRST WORD OF CELL STORAGE
+0006		LWAM	RMB	2	Last word of cell storage
+0008		STACK	RMB	2	Bottom of stack
+000A		LIMIT	RMB	2	stack limit register
+000C		OBLISTB	RMB	2	pointer to object-list
+000E		N	RMB	2
+0010		FREE	RMB	2	pointer to free list
