@@ -10,9 +10,9 @@ The complete manual came on ~60 physical pages at a maximum of 64 fairly sparse 
 
 Original scans are in lisp15.pdf. Some pages have pencil notes made by Paul which are not transcribed. 
 
-### The original source code
+### The source code
 
-The file lisp.txt was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX os games disk.
+The file lisp.asm was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX os games disk. Some obvious typos in the code have been corrected, but it has not been verified that it actually is the code, and there are probably more errors.
 
 ### The Dr. Dobbs original article
 
