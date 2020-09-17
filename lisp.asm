@@ -136,7 +136,7 @@ RSTART   LDS   STACK
    LDX   #N
 CLRLOC   CLR   0,X   CLEAR (NIL) WORK SPACE.
    INX
-   CPX   OBLSTP
+   CPX   #OBLSTP
    BNE   CLRLOC
    LDX   N
    STX   ARG1
@@ -145,9 +145,9 @@ CLRLOC   CLR   0,X   CLEAR (NIL) WORK SPACE.
    JSR   PMESSG   VERSION NUMBER.
  PAG
 *************************************
-*   #*
-*   THE LISP INTERPRETER   *
-*   #*
+*                                   *
+*   THE LISP INTERPRETER            *
+*                                   *
 *************************************
 
 
@@ -1868,7 +1868,8 @@ DIVSCL   INC   STEPC
    BPL   DIVSCL
    STAA   NUM2
    STAB   NUM2+1
-   LDAA   NUM1+1
+   LDAA   NUM1
+   LDAB   NUM1+1
    CLR   NUM1
    CLR   NUM1+1
 DIV1   SUBB   NUM2+1
@@ -1929,7 +1930,7 @@ ID.MS   FCC   'ILLEGAL DEVICE'
 HED   FCC   '   LISP 1.5   V3A'
  PAG
 *
-* THE OBJSECT LIST (OBLIST)
+* THE OBJECT LIST (OBLIST)
 *
 LOC   EQU   *+3
    ORG   LOC/4*4   EVEN WORD ADDRESSING
@@ -2138,7 +2139,7 @@ OBL18   EQU   *
    FDB   *+4,OBL19
    FDB   *+12+M,*+4
    FDB   SUBR,*+4
-   FDB   PRIN1   NIL
+   FDB   PRIN1,NIL
    FCC   'PR'
    FDB   *+2
    FCC   'IN'
@@ -2289,6 +2290,7 @@ OBL31   EQU   *
    FDB   NIL
 OBL32   EQU   *
    FDB   *+4,OBL33
+   FDB   *+12+M,*+4
    FDB   SUBR,*+4
    FDB   READCH,NIL
    FCC   'RE'
