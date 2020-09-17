@@ -1,0 +1,5812 @@
+ 
+
+    
+
+M6800 LISP 1.5 PROGRAMMERS MANUAL
+COPY RIGHT 3928 BY:
+FRITS VAN DER WATEREN.
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+~
+
+; Getting started with LISP,
+It is most likely that you have to patcn the I/O part of LIsP
+toa your environment, For this purpose a listing of this section
+
+is supplied. This will be clear enough to patch the neccesary
+changes.
+
+Only a few notes an the device-table,which starts at #106,
+LISP talks to a device via software I/O ports. Each port has
+four link-pointers in the device-table.
+
+Link #1 should point to a routine that reads one character,which
+is returned in the A-accumulator.
+
+Link #2 should point to a routine that outputs one character,
+which is supplied in the A-accumulator,
+
+Link #3 should point ta an OPEN-routine,which can be used either
+to initialise the handler or to open a file on file-oriented
+devices. In that case a filename can be supplied. The pointer
+to that name is in “ARG2’ ($16), When the filename is omitted,
+the contents of “ARG2° is NIL.
+
+The OPEN-routine must return T or NIL in the X-register.
+T in the case that the operation succeeds and NIL when it failed.
+NIL#$0000 and T=S0DCC
+
+Link #4 should point to a CLUOSE-routine,that closes the current
+file on this device. This routine must also return T or NIL in X,
+A special case is the close-routine for device #1,which checks if
+
+athe ETX (ctr1/C) key is pressed. On ETX it jumps back to the
+
+LIiSP~intercreter otherwise it continues. This routine is called
+several times during evaluation,but only via link-address #4 of
+
+«device #1,
+
+ 
+
+ 
+
+How to start LISP,
+
+The start address of LISP is #100. When started it immediately
+allocates all contiguous RAM from the last location of LISP.
+
+It reserves the upper 1/f part of memory for stack. One stack element
+takes always two bytes.
+
+And tne lower 7/A part of memory for cell-storage. Une cell is 4 bytes.
+It then initialises the QBLIST, i.e. all user entered ATUM’S
+
+are deleted, Furtt more a garbage collection is forced, by setting
+
+ 
+
+the FREE-LIST to NIL. After all this work LISP is ready ror ineut
+and types a prompt { * ) on the systems console (dev #1),
+
+To restart LISP, go at address $103, All ATCM’S on the OBLIST are
+then maintained. Only a garbage collection is forced to clean up
+the cell~storage.
+Input ~ Cutout,
+
+This LISP version is capable of handling more than ane device.
+This is done by adding a port-number as an argument to I/U-
+functions. However when this argument is NIt or it is omitted,
+then I/O-port 1 is assumed.
+
+Port-1 is the systems console (full duplex) and is interfaced
+by an ‘ACIA’ located at $FFOO and $FFO1.
+
+Port-2 is an high-speed reader interfaced by the A=section af
+a ‘PIA’ at SFF10 and SFF 14, .
+Port-3 is a high-speed punch interfaced by the B-section of a
+
+"PIA’ at SFF12 and SFF13.
+
+Port-4 and 5 are unused,but may be patched to user I/0 routines,
+
+Functions that can use I/O0-ports are: -
+
+({PAIN4’ X DEV)
+(PRINT X DEV)
+(TERPRE DEV)
+(READCH DEV)
+
+{READ 1 DEV)
+
+(READ DEV)
+
+(GPEN DEV Filename}
+(CLOSE DEV)
+
+Where ‘DEV’ is the sort number.
+YPEN or CLOSE performed on port 3 result in punching of about
+16 inch of blank tape.
+
+The input format is very free. You can insert spaces,tabs,comma‘s
+and carriage-returns anywhere in the input string as separators
+to make it more readable. But an ATOM must be a contiguous string
+of characters ofcourse, without any of these special characters.
+
+Sut when you want to use these seperator charcaters and/or the
+special characters:left-parenthesis,right-parentesis and a dot,
+then you have to super-quote the ATOM, This is because the function
+QUOTE will not work on these characters. As superguotes the
+characters ‘ and “ are used. The string to be quoted must be
+enclosed by either of them. However when this string is closed by
+a carriage-return it cleses the quoting too, and the carriage-
+return is included as last character in the string.
+
+Sa when you want for-instance a single carriage-return,
+
+then write: “
+
+where a stands for carriage-return.
+
+Error recovery.
+
+When you have typed an error,you can delete the whole line by
+typing CTAL/X (cancel). The system echoes a # and continues
+reading on the next line.
+
+Previous characters can be deleted by typing a CTAL/H (back-space)
+The system then echoes this backspace,but only when there are
+characters in the buffer,
+
+When your terminal has na back~space feature,you can use the
+RUBOUT-key. The deleted characters are then echoed in reverse
+order,enclosed by square brackets,
+
+An evaluation can be aborted by pressing CTAL/C (ETX).
+
+ 
+Errors during runtime.
+
+ 
+
+ 
+
+syntax ERROR
+
+‘* ILLEGAL NUMBER
+
+“ NON ATOMIC ARG:<list>
+ATOMIC ARG: <atom>
+
+* ILLEGAL FUNCTION: <list>
+* ILLEGAL GO:<atom>
+
+*WILEGAL OEVICE:<dev>
+OVERFLOW
+
+TOO MANY AAGS
+
+TOG LITTLE ARGS
+
+a
+The following are the possible errors and their meaning.
+
+The input string is not a legal S-exaression,
+Illegal number structure in input string
+
+This errar occurs when a function wants an
+atomic argument. Value is NIL and evaluation
+continues, .
+
+Atomic argument for CAR. Value is NIL and
+evaluation continues.
+
+This function is not available in the OBLIST.
+This label is mot inside the current PROG,
+
+Only local labels are allowed.
+
+This device is not available in the
+DEVICE-TABLE.
+
+An arithmetic overflow has occured.The value
+
+is taken modulo 2°18,and evaluation continues.
+There are too many arguments supplied with a
+SUSAR or FSUBR type of function. The remaining
+arguments are ignored and evaluation continues.
+There are too little arguments supplied with
+
+a FSUBR-type of function. The missing arguments
+are taken to be NIL and evaluation continues.
+
+" TCG MANY ARGS FOR: <list>There are tea many arguments supplied with
+
+an EXPA or FEXPR~type of Function.
+
+TOG LITTLE AAGS FOA:<LIST> There are too little arguments supplied
+
+4
+
+% NON NUMERIC ARG: <list>
+WsTack oVERFLOW
+
+*MEMORY FULL
+
+with an EXPA or FEXPR-type af function.
+
+The argument must be a number for: PLUS,
+
+MINUS ,TIMES QUOTIENT and GAEATEAP,
+
+The stack has been used up. The system restarts
+at $103
+
+All cells have been used up. The system restart
+at $103
+
+note; All errors marked with a * are fatal errors, that is:
+the current evaluation is aborted and a prompt is typed.
+
+ 
+   
+ 
+
+A_brief description of the cell structures,
+
+The basic element in LIsp is the cell swhich requires four bytes
+in this implementation, The first two bytes represent the CAR-
+address ,and the last two bytes the COR ~address, All addressing
+of the cells is even~word,that is: bits-0 ang 4 8re always zero,
+However bit-0 of the CAR-part is used as an ATOM-mark and bit-0
+
+of the COA-part is used as @ mark by the garbage collector,
+Naw an ATOM looks like;
+
+<— ATOM-mark,
+Ocinter to
+Aroperty-list
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+-—
+J
+
+ 
+
+ 
+
+ 
+
+ 
+
+} Pointer to
+NIL
+
+When the brint~name consists of an odg Number of Characters,a
+
+A numeric ATOM always consists of two cell’s and looks like:
+
+o
+Zz
+4
+rc
+
+16-bit
+
+two's complement number,
+
+}pointer to
+fp
+
+ 
+
+ 
+
+ 
+
+ 
+
+umbers in LIgp are represented @S a 16-bit Signed integer,
+
+Om begins with a numeric
+Character or a + or - sign,
+
+The internal number representation in CISP is an ATOM with a
+brint-name of NIL,
+
+ 
+ 
+
+Elementary functions.
+
+2 (CAR X)
+
+ 
+
+ 
+
+{COR x)
+(CONS X Y)
+(QUOTE X)
+
+(RPLACA X Y)
+(APLACD xX Y)
+
+I/O functions,
+(READCH DEV)
+
+(READ1 DEV)
+(READ DEV)
+(TEREAD )
+(PRIN? DEV)
+{PRINT X DEV)
+
+¢ (TERPAI OEV)
+(OPEN DEV NAME)
+
+{CLOSE DEV)
+Predicates,
+
+(ATOM x)
+(NUMBER X)
+(NULL X)
+
+{EQ X Y)}
+(GREATER x y)
+
+value is the ‘CAR-part’ ‘
+
+The CAA of an ATOM
+an error message.
+Never access the property of a SUGAR or FSUSR indicata
+because it contains the pointer to a machine
+
+language routine.
+
+value is the “CDR-part‘ of X.
+
+value is the list: (X . Y) .
+value is X litteraly
+
+replace the ‘CARpart’ of X by Y:ivalue is X
+
+replace the ‘COA-part’ of X by Y:value is X
+
+Be very careful with these two functions, because
+
+you alter an existing list-structure,.
+
+OF X,
+
+is illegal, and will result in
+
+read one single character from ‘DEV’,
+
+The value is an ATOM of this Single character.
+read an atom: value is this atom,
+
+read an S-expression; value is this expression.
+Flush the input buffer; value is NIL.
+
+print atom X:value is NIL.
+
+Print S-~expression X; value is NIL.
+
+When there are more than 55 characters on a line
+then the first occurence of a space will be
+replaced by a carriage-return and linefeed.
+Brint a CR and LF on DEV: value is NIL
+
+open a file on DEV with NAME as file name.
+Filename may be omitted for non file ariented
+devices,
+
+close file on DEV
+
+if X is an atom,value is T else NIL.
+
+if X is a number,value is T else NIL.
+
+if X is NIL, value is T else NIL.
+
+if X is the same as Y,value is T else NIL
+if x is greater than Y,value is T else NIL.
+
+Arithmetic functions.
+
+(PLUS x Y)
+(MINUS X Y)
+{TIMES x Y)
+(QUOTIENT x Y)
+
+ 
+
+value is X + Y
+value is X -Y
+value is X * ¥
+value is xX / Y
+Some miscelaneous functions.
+
+(SET@ xk Y)
+
+(PUTPROP x Y 2)
+
+(GET x Y)
+
+(SASSOC X Y)
+
+(ALIST )
+(COND YA B)CX Y))
+
+{LIST AB C...2)
+
+(EVAL X Y)
+
+(APPLY X Y¥ Z)
+
+(PROG (A d....)
+L_{statement1)
+{statement 2)
+
+(GO L)
+
+(RETURN X)
+
+X is set ta the value of Y;this is also the .
+value of this function. .
+X is looked up first on the association-list, i
+before altering the permanent value of X.
+
+The property-list of atam X is extended by property Y
+
+under an indicator Z, If the indicator already
+
+exists,then its property is altered:value is Y
+
+Get the property saved under the indicator Y fram
+
+the property-list of atom xX,
+
+Lookup X on the association-list Y, when found
+
+return its value;:eise NIL.
+
+return the current systems association-list.
+
+General conditional. Each argument of COND
+
+is a conditional expression. The number of these
+expressions may be infinite.
+
+A conditional expression consists of two items;
+
+the first item (A) is evaluated and when NIL, the
+
+next conditional expression is taken,etc; atherwise
+
+the second item (8) is evaluated, which is then
+
+the final result of COND,
+
+When there is na second item, then the value of
+
+the first item is the result, when not NIL.
+
+When COND runs out of its argument list, then the *
+result is NIL: rather than an error message,
+
+The result is a list of all its evaluated arguments.
+
+The number of arguments may be infinite. 4
+Evaluate X with Y as assaciation-list.
+
+In fact this is the LISP-interoreter itself.
+
+When a variable is evaluated, then the assocation~
+list is always looked up first (by SASSOC) rather
+than to take the permanent value from its
+property~list.
+
+Apply the argument Y ta the function X with
+
+2 as initial association-list.
+
+With this function we are capable of writing
+@rograms in LISP, The first argument af PAQG
+
+is a list of variables used inside the PROG.
+
+These are the so called ‘local variables’ and
+
+are initialy set to NIL.
+
+The remainder is a list of labels and statements.
+PROG’s may be nested to any level.
+
+Goto label & (litterally). GO is restricted
+
+to local labels only. A reference outside
+
+a PROG will result in an error.
+
+Return from a PROG with the value af X,
+
+RETURN is the only legal exit from a PAUG.
+
+ 
+(FUNCTION x) The result is the list: (FUNARG xX alist)
+wnere ‘alist’ is the association-list at the
+time FUNCTION is called. When this list is
+scanned a next time, then X is evaluated with
+‘alist’ as association-list rather than the
+
+» current association-list,
+
+. This is the sa called FUNASS meganism.
+
+O8LIST OBLIST is an ATOM who's permanent value
+is a list of all ATOM’s, known by the
+system so far.
+Some other objects are:
+SUBAR ,FSUSR ,EXPA ,FEXA ,LAMSDA,FUNAAG,NIL,T
+All these objects have their self as value.
+
+note: All underlined arguments are taken litterally.
+All other arguments are evaluated before they are applied
+to the calling function.
+
+I hope you will enjoy LISP,
+And if any problems with LISP are encountered, or when you have
+any suggestions for improvements, which can be implemented in
+@ next version, please let me know,
+
+Frits van der Wateren
+van "t Hoffstraat 140
+
+a NU 2014 AK Haarlem
+The Netherlands
+
+ 
+PAGE al
+
+Lisp
+
+M6862 MICRO ASSEMBLER
+
+*
+FESSOR SIO AOA AK LISP 1.5 FEO IOI A IOC
+
+*
+*
+cd
+*
+*
+*
+*
+*
+*
+*
+*
+x
+*
+*
+*
+a
+*
+cd
+*
+*
+*
+*
+*
+*
+*
+*
+*
+*
+
+COPYRIGHT 1978 BY:
+
+FRITS VAN DER WATEREN
+VAN "T HOFFSTRAAT 148
+2014 RK HAARLEM
+THE NETHERLANDS
+
+LISP STARTS AT $102.
+AND AUTOMATICALY ALLOCATES ALL CONTIGUOUS MEMORY
+AND RESERVES 7/8 FOR CELL STORAGE (4 BYTES PER CH
+AND 1/8 FOR STACK (2 BYTES PER WORD).
+
+RESTART IS AT $123
+THE CURRENT OBLIST IS MAINTAINED BUT THE
+A-LIST BINDINGS ARE LOST.
+FURTHERMORE A GARBAGE COLLECTION IS FORCED.
+
+THE DEVICE TABLE IS LOCATED AT $126
+AND CAN BE EXTENDED BY TWO MORE DEVICES.
+IMPLEMENTED HANDLERS ARE:
+#1 TTY WITH AN ACIA AT SFFOO
+#2 READER WITH A PIA AT $FFI@ (A)
+#3 PUNCH WITH A PIA AT SFF1@ (BD
+
+ 
+PAGE @2 LISP M6800 MICRO ASSEMBLER
+
+ 
+
+  
+ 
+  
+ 
+  
+
+aaa ORG a
+. 9208 (1740) NIL RMB 4 ATOM NIL
+0004 peg FWAM RMB 2 FIRST WORD OF CELL STORAGE
+2006 LWAM —- RMB 2 LAST WORD OF CELL STORAGE
+2c08 STACK RMB 2 BOTTOM OF STACK
+920A LIMIT RMB 2 STACK=LIMIT REGISTER
+aoac = OBLSTB RMB 2 POINTER TO OBJECT-LIST.
+BOZE - N RMB 2
+3910 92d FREE RMB 2 POINTER TO FREE LIST
+aa12 {| CURCEL RMB 2 POINTER TO CURRENT CELL
+QOl4 4 ae ARGL = RMB 2 HOLDS ARGUMENT 1 DURING EVALUATO
+OG16 + ARG2 = RMB 2
+eg1g « ARG3 RMB 2
+OBA PROGB RMB 2 BEGIN OF CURRENT PROG-LIST
+Be1C RUNP RMB 2 RUNNING POINTER ON PROG-LIST
+ZO1e OBLSTP RMB 2
+2028 RMB 2
+ag22 + AP RMB 2
+g¢24 = HUM RMB 2
+3026 nUM2 RMB 2
+BG28 fF —SAVEX RMB 2
+292A TEMPX RMB 2
+e22c MP RMB 2
+‘ O22E PNAME RMB 2
+2039 STEPC RMB 1
+2031 SIGN RMB 1
+1 2e32 cP RMB 2 POINTER TO CURRENT INPUT CHAR.
+9934 DELFLG RMB t
+8035 DEVICE RMB. 2 POINTS TO I/O HANDLER LINK ADDRE
+9037 CCOUNT RMB 1 CHARACTER COUNT FOR OUTPUT.
+_
+2201 " EQU ! MARKER
+838 F EQU $a FILL CHARACTER
+8238 FIRSTC EQU * REMAINDER 1S INPUT-BUFFER
+2196 . ORG $102
+QOFF LaSTC = EQU x1
+BTR Dt — Foe Barge 4 76
+Ouree !
+
+tLe 2
+
+ 
+PAGE @3 LISP M6882 MICRO ASSEMBLER
+
+@123 7E a13e JMP START COLD START. .
+2193 7E 2182 JMP RSTART WARM START.
+
+*
+% DEVICE TABLE
+
+*
+* EACH ENTRY CONSISTS OF FOUR POINTERS
+* TO I/O HANDLERS.
+
+* POINTER ! IS INPUT HANDLER
+
+* POINTER 2 1S OUTPUT HANDLER
+
+* POINTER 3 IS OPEN OR INITLALISE
+
+* POINTER 4 IS CLOSE
+*
+*
+*
+*
+3)
+
+DEVICE #1 IS THE SYSTEM DEVICE
+
+3196 82 EVTBL FDB TTYIN, TTYOUT , TTYOPN ,ABORT
+@1ZE 92 FDB RDRIN, DUMMY ,R DROPN ,TR
+
+@116 22 FDB DUMMY , PUNOUT, PUNOPN , PUNCLS
+
+QlLE a8 FDB 2,9,0,9 #4 FOR EXTENTION.
+
+B126 23 FDB 0,8,0,2 #5 FOR EXTENTION.
+
+B1ZE a2 FDB a ZERO ENDS THE TABLE .
+
+BAe, 292 OSE 2O7
+
+iy of! aN mo
+Ak © os
+
+~ Y
+
+ 
+PAGE 24 LISP
+
+0133
++ O133
+. B135
+0138
+@13A
+a13D
+QL3F
+alae
+g144
+B16
+0148
+14a
+Blac
+BL4E
+Q14F
+gist
+0152
+Bl54
+2156
+158
+D15A
+BISC
+a15D
+QISE
+O1SF
+@169
+O16!
+“3162
+a16a
+B166
+@167
+@169
+218
+316D
+216E
+9172
+3173
+B17
+2178
+a1
+aD
+Gl TF
+B1g2
+@184
+3187
+“e189
+OLBA
+ @18D
+918F
+Z191
+-B193
+72196
+g199
+
+*
+
+*
+
+ 
+
+cE
+DF
+CE
+DF
+cE
+DF
+CE
+DF
+86
+a7
+al
+26
+6F
+28
+20
+35
+OF
+96
+D6
+Dg
+92
+44
+56
+44
+56
+44
+56
+De
+92
+43
+97
+C6
+D7
+4c
+97
+1F
+CE
+DF
+CE
+EE
+EE
+BD
+9E
+CE
+6F
+a8
+8c
+26
+DE
+DF
+BD
+CE
+BD
+
+BD95
+ae
+@D9C
+@2
+BDAC
+
+1278
+a4
+8B
+ao
+rt)
+@5
+ao
+
+FS
+
+28
+a8
+a9
+a5
+a4
+
+a9
+28
+
+96
+82
+a7
+
+OA
+@02B
+aoc4
+is
+DAC
+02
+g2
+C7T7TE
+28
+QBSE
+a2
+
+@OlE
+Fg
+GE
+14
+Q5F
+edge
+@3A5
+
+START
+
+SEEK
+
+END
+
+RSTR
+
+RSTART
+
+CLRLOC
+
+M6898 MICRO ASSEMBLER
+
+LDX
+STX
+LDX
+STX
+LDX
+STK
+LDX
+STX
+LDAA
+STAA
+CMPA
+BNE
+CLR
+INK
+BRA
+TXS
+sts
+LDAA
+LOAB
+SUBB
+SBCA
+LSRA
+ORB
+LSRA
+RORB
+LSRA
+ORB
+SUBB
+SBCA
+COMA
+STAA
+LDAB
+STAB
+INCA
+STAA
+CLR
+LDX
+STX
+LDX
+LDx
+LDX
+JSR
+LDS
+LDX
+CLR
+INX
+CPX
+BNE
+LDX
+STX
+JSR
+LDX
+JSR
+
+#NAMNIL+M * SET ATOM NIL AT $2002
+NIL y
+#PRPNIL x
+NIL+2 x
+#OBLIST
+OBLSTB BEGIN OF OBLIST
+#LISPSP
+FWAM roi, FIRST FREE CELL.
+
+2198 lx 2s ce
+a,x ALLOCATE ALL sae ween
+asx CONTIGUOUS MEMORY rue wore tess cd
+END RIGHT AFTER LISP.*? spec.
+@,X LIED Fone
+
+SEEK
+
+STACK
+
+STACK RESERVE STACK SPACE~
+STACK +1
+
+FWAM+1
+
+FWAM
+
+STACK+1
+STACK
+
+LWAM LWAM=- (STACK /8-STACK )
+#82
+
+LWAM+1 ON PAGE-BOUNDARY + 128
+STACK-LIMIT ON PAGE BOUNDARY.
+
+LIMIT 128 BYTES FOR STACK OVERFLOW
+LIMIT+1
+
+#0BL1
+
+ARG2
+
+#0BLIST
+
+2,x
+
+2,x
+
+RPLACA RESTORE OBLIST
+
+STACK
+
+#N
+
+a,x CLEAR (WIL) WORK SPACE.
+
+#OBLSTP
+
+CLRLOC
+
+N
+
+ARGI
+
+OPEN OPEN DEV #1
+
+#HED PRINT: LISP 1.5 AND
+PMESSG VERSION NUMBER.
+PAGE @5 LISP M6820 MICRO ASSEMBLER
+
+SRI OR OK IR IOC OR ICR AOR AR,
+
+* * ”
+* THE LISP INTERPRETER *
+* *
+
+JOO RAI AR AIR COR IO OK OR OC
+
+2rSC 9E 8 ° ‘ LISP LDS STACK
+
+BI9E DE BE LDXx N
+
+S1A2 BD S6F7 JSR TEREAD
+
+@1A3 BD OG6EF JSR TERPRI
+
+@1A6 BD 6437 JSR READ jos READ ONE S-EXPRESSION FROM DEV #
+@1A9 DF 14 STX ARG1
+
+@1AB DE OE LDXx N
+
+Z1AD DF 16 STX ARG2
+
+SIAF DF IA STX PROGB
+
+@131 DE 14 LDXx ARG!
+
+@1B3 8D 6sB9 JSR EVAL EVALUATE
+
+2136 DF 14 '@" §TX ARGI
+
+@iBS DE BE LDX N
+
+21BA DF 16 STX ARG2 .
+@1BC BD a6g2 JSR PRINT AND PRINT RESULT ON DEV #1
+
+SIBF 22 DB BRA LISP
+
+Agel = (ASC
+
+ 
+PAGE 06 LISP M6820 MICRO ASSEMBLER
+
+a
+: ‘ * GET A CELL FROM THE FREE LIST
+-~ : * ON EXIT X POINTS TO THIS CELL
+
+*
+
+c
+
+@icl DE 1@ /43.CELL —_LDX FREE
+@1C3 27 OD iv‘ BEQ GCOL FREE LIST 1S EMPTY
+@1C5 DF 12 STX CURCEL GET CELL
+@IC7 FE a2 LDX 2,X ADVANCE POINTER TO NEXT
+@ics DF 10 STX FREE FREE CELL ON LIST
+@ICB DE 12 LDX CURCEL
+BICD 6F a2 CLR 2,x CLEAN UP THIS CELL!
+GICF 6F 83 CLR 3,X
+@1D1 39 RTS
+*
+* GARBAGE COLLECTOR.
+: *
+gib2 DE 14 y;¢f GCOL LDX ARG
+gipa BD 65 BSR MARKL MARK 3 CURRENT ARGS.
+@1D6 DE 16 LDX ARG2
+2108 8D 61 BSR MARKL
+- G1DA DE 18 LDX ARGS
+Z10C 8D 5D BSR MARKL
+BIDE DE 1A LDX PROGB
+- G1E3 8D 59 BSR MARKL MARK PROG
+*@1E2 DE 2c LDX OBLSTS
+Z1E4 BD 55 BSR MARKL MARK OBLIST, S4ve~
+4 GlES 39 Sx
+aiE7 29 DEX . pee one
+@iEB 9C OB 71/,GCOLI1 CPX STACK pees
+@1EA 27 18 BEQ GCOLS aed
+@1EC BD O3C7 JSR PUSHX MARK ALL ACTIVE LISTS
+QL EF AG @1 LDAA 1X ON THE STACK 4
+GFL ES 32 LDAB 2X .
+Z1F3 DO OD SUBB OBL STB+1 ee ue
+QIFS 92 BC SBCA —OBLSTB Lon
+Q1F7 2B 24 + ) aur GCOL2 POINTS IN SYSTEM AREA. i
+@iF9 EE @! LDX 1,Xx ‘
+Q1FB 8D SE BSR MARKL a)
+QiFD BD B3E5  GCOL2 JSR PULLX .
+8298 68 INX
+@281 08 INX
+@202 20 EA BRA G6COL1
+9204 DE GE ° GCOL3  LDX N
+9206 DF 18 STX FREE
+2208 DE 26 LDX LWAM
+- ME Kase Ay One herive Pres
+(Num Mim? ASRUEX
+’ ¢ ell stk on ey t
+
++ tb CHE BE >Sxc een |
+NB Vier 1G CRE Ou Srtek (Mor Sar Four Ceres)
+
+ 
+PAGE 87 LISP M6882 MICRO ASSEMBLER
+
+@20A 9C aC SWEEP CPX OBLSTB NOW SWEEP ALL UNMARKED CELLS :
+g20c 27 1D BEQ SWPDON ONTO THE FREE LIST.
+@28E 39 DEX
+
+@20F @9 DEX
+
+8210 9 DEX
+
+2211 @9 DEX
+
+0212 AG G3 LDAA 3X
+
+@214 67 03 ASR 3,X UNMARK CELL Mage [CDR
+
+@216 68 03 ASL 3,X
+
+@218 46 RORA
+
+@219 25 EF Bcs SWEEP
+
+@21B 96 10 LDAA FREE LINK AN UNMARKED CELL
+
+@21D DE tk LDAB FREE+1 TO THE FREE-LIST
+
+B21F 6F 6B CLR a,x
+
+9221 6F ai CLR 1,X
+
+2223 AT G2 : STAA 2X
+
+8225 E7 a3 STAB 3, X
+
+@227 DF if STX FREE
+
+2229 28 DF BRA SWEEP
+
+9228 DE 10 SWPDON LDX FREE -
+822D 27 a3 BEQ FULL NO FREE-LIST!
+
+@22F 7E 91C1 JMP CELL
+
+2232 CE DSB FULL —LDX #FL MS .
+0235 BD @3A5  SYSERR JSR PMESSG
+
+@238 7E 3182 MP RSTART e
+
+ 
+PAGE #8 LISP M6802 MICRO ASSEMBLER
+
+*
+
+* MARK ONE LIST
+*
+
+233 27 4! 2%2 MARKL BEQ MARKEX EMPTY LIST
+“ 23D 4F CLRA
+Q23E 36 PSHA SET BOTTOM OF WORKSTACK TO NIL.
+G23F 36 PSHA
+9248 8C BGC! ~ MARK 1 CPX #1 NUMERIC CELL?
+2243 27 26 BEQ MRKNUM YES
+2245 DF 1@ STX FREE
+2247 96 19 LDAA FREE
+e249 D6 Li LDAB FREE+1
+2248 DO OD SUBB OBLSTB+1
+g24D 92 @C SBCA OBLSTB NO; LIST IN SYSTEM AREA?
+@24F 2B 21 BMI MARK2 YES; UP ONE LEVEL
+@251 36 RORB NO, ATOM CELL? ax Si 4
+@252 25 12 Bcs | RKATM YES 5 -
+2254 AG 93 *~——EpAA (3px be) Ee
+0256 46 RORA CELL MARKED? Cent
+@257 25 19 BCS ARK2 YES,UP ONE LEVEL ~
+9259 6C 83 INC Box NO,MARK CELL
+9258 BD 23C7 JSR PUSKX 369
+@25E EE 28 LDX @,Xx DOWN CNE LEVEL
+@26@ 20 DE BRA MARK I
+-
+12262 6C 3 7f— MRKNAM INC ax MARK PRINTNAME OF ATOM
+0264 EE ¢2 LDX 2,X
+2266 89 MRKATM DEX
+¥G267 26 FO BNE MRK NAM
+8269 20 27 2 BRA MARK2
+@2 BD G3E5 2FF MRKNUM JSR PULLX MARK ONE NUMERIC CELL
+O26E EE g2 LDX 25% ALREADY WM PRRED
+@270 6C 22 oe INC 2X
+@272 BD O3E5 MARK2 JSR PULLX UP ONE LEVEL
+@275 27 O87 BEQ MARKEX TOP LEVEL! SO EXIT.
+@277 EE 2 LDX 2,X
+2279 @9 DEX TAKE CARE OF MARK
+@27A 27 F6 BEQ MARK2
+a@27C 28 C2 BRA MARK I aR
+D27TE 39 MARKEX RTS fh Say
+. (erg
+t wb
+Sy Bi
+MafKL 3 IF X=NuL THe ReTHEN poe & v1
+
+BSE Puch wit Maar
+
+NOEEL SF ye Namen “THEn: MARK, PoP x, Fore ‘
+
+ 
+PAGE @9 LISP M6802 MICRO ASSEMBLER
+
+x .
+* INPUT ONE CHAR FROM TTY o
+
+*
+227F BE FFI2 TTYIN LDAA ACIACS
+
+@282 47 ASRA
+
+0283 24 FA Bcc TTYIN
+@285 BS FFA) LDAA ACIADA
+0288 84 7F ANDA #$7F
+028A 39 RTS
+
+*
+* OUTPUT ONE CHAR. ON TTY
+
+*
+@26B FG FFQQ TTYOCUT LDAB ACIACS
+
+@28E 57 ASRB
+228F 57 ASRB
+2298 24 FS BCC TTY OUT
+2292 B7 FFI STAA ACIADA
+a295 39 RTS
+*
+* OPEN TTY CINITIALISE)
+* *
+8296 86 Bl TTYOPN LDAA #21
+6298 37 FF2S STAA ACIACS
+2298 23 16 BRA TR .
+
+*
+* ABORT IF CTRL/C (ETX) IS PRESSED
+*
+
+@290 BE FFZO ABORT LDAA ACIACS IF CTRL/C IS PRESSED
+
+@2A8 47 ASRA THEN ABORT EVALUATION.
+G2Al 24 BA Bcc TR
+O2A3 BS FFI LDAA ACIADA
+@2A6 81 23 CMPA #3
+@2A6 26 23 BNE TR
+@2AA TE Zisc JMP LISP
+@2aD 7E S6EB TR JMP TRUE
+FOO ACIACS EQU SFF2O
+
+FFOL ACIADA EQU SFFSI
+
+ 
+PAGE 1@ LIsP M6846 MICRO ASSEMBLER
+
+*
+. * INPUT ONE CHARACTER FROM HIGH SPEED READER.
+*
+
+* 2B BE FFI! RDRIN LDAA RDRC
+
+@2B3 2A FB BPL RDRIN
+@2B5 BS FFI LDAA —-RDR
+Q2B8 43 COMA
+9239 84 TF ANDA #37F
+@2BB 27 F3 BEQ RDRIN IGNORE NULLS
+g2BD 81 IF CMPA 437F
+G2BF 27 EF . BE RDRIN IGNORE RUBOUT
+@2ci 81 2A CMPA #50
+@203 27 EB BEQ RDRIN IGNORE LF
+g2c5 39 DumMY RTS
+*
+* OPEN READER (INITIALISE)
+*
+g2C6 7F FFI1 RDROPN CLR RDRC
+9209 IF FFIS CLR RDR
+gecc 86 2E LDAA #2101119
+_ G2CE B87 FFLL STAA —- RDRC
+g2Dl BS FFI LDAA = RDR SET FLAG
+g2D4 29 D7 BRA TR
+*
+: * QUTPUT ONE CHARACTER ON PUNCH.
+*
+9206 FS FF13  PUNOUT LDAB PUNC Po
+*9209 2A FB BPL PUNOUT
+@20B B7 FFI2 STAA PUN
+@2DE 39 RTS
+*
+* OPEN PUNCH CINITIALISE) AND PUNCH LEADER.
+oe
+O2DF 7F FF13 PUNOPN CLR PUNC
+@2E2 TF FFI2 CLR PUN
+@2E5 86 2E LDAA #ZAGLIIS
+@2E7 BT FF13 STAA PUNC
+
+*
+* CLOSE PUNCH; PUNCH TRAILER.
+*
+
+@2EA 86 96 PUNCLS LDAA #158 Pauncew
+@2EC 97 38 STAA STEPC
+@2EE 4F TRAIL CLRA
+O2EF 8D ES BSR PUNOUT
+@2FL 7A 832 DEC STEPC
+. O2F4 26 FS BNE TRAIL
+@2F6 22 BS BRA TR
+7 FF1O RDR EQU SFFIG
+FFIL RDRC EQU SFFLL
+FFi2 PUN EQu SFFI2
+
+* FFIS PUNC EQU SFFIS3
+
+ 
+PAGE 11 LISP M6822 MICRO ASSEMBLER
+
+* BUFFER ONE LINE FROM INPUT DEVICE
+*
+
+@2F8 86 48 DELINE LDAA #°@
+
+Q2FA BD 838F USR OUTCH! OUTPUT A '@’ ON CTRL/X
+
+@2FD BD 8339 JSR CRLF AND IGNORE WHOLE LINE.
+
+8308 86 2A ACS INPSTR LDAA a"
+
+2322 BD 038F JSR OUTCH! OUTPUT A PROMPT.
+
+0325 CE 2938 LDX #FIRSTC INIT BUFFER
+
+@3@8 6F 2 CLR 8,X
+
+Q30A 7F 6834 NEXTCF CLR DEL FLG~iAca,
+
+Q30D DF 32 ant NEXTC STX cP
+
+@30F BD 239A JSR INCH sel
+
+@312 81 18 CMPA #318 CTRL/X (CAND?
+
+3314 27 E2 BEQ DEL INE
+
+O316 81 48 CMPA #8 BACKSPACE?
+
+@318 27 2F BEQ DEL
+
+Q31A 81 7F CMPA #O7F DELETE?
+
+2310 27 2B BEQ DEL
+
+B31E A7 Ol STAA L,X NO,STORE CHAR,
+
+2322 7D @234 IST DELFLG AT END OF DEL SEQUENCE?
+
+G323 27 94 BEQ NORML .
+@325 86 5D LDAA #7) YES, CLOSE STRING OF
+
+8327 8D 66 BSR OUTCH! DELETED CHARACTERS.
+
+2329 AG 21 NORML = LDAA 1,X .
+232B 8D 62 BSR OUTCH1 ECHO TYPED CHAR.
+
+232D 81 aD CMPA #$D CR?
+
+G32F 27 28 BEQ CR '
+9331 BC GOFF cPX #LASTC NO,BUFFER FULL?
+
+8334 27 DA BEQ NEXTCF YES
+
+2336 28 INX
+
+0337 28 Dt BRA NEXTCF
+
+9339 CE 2938 CR LDX #FIRSTC RESET BUFFER POINTER
+
+@33C DF 32 sTX cP
+
+Q33E 7F 2037 CLR CCOUNT
+
+@341 8D 4c BSR QUTCHL REFLECT CR &LF.
+
+2343 86 2A LDAA #3A
+
+B345 8D 48 BSR ouTCH!
+
+0347 28 1B BRA GETC
+
+2349 BC 9238 DEL CPX #FIRSTC
+
+@34C 27 BF BEQ NEXTC BUFFER UNDERFLOW!
+
+Q34E a9 DEX
+
+O34F 81 28 CMPA #8
+
+a351 27 @D BEQ@ SHWDEL +2
+
+3353 7D 9234 TST DELFLG TYPE DELETED CHARACTERS
+
+8356 26 26 BNE SHWDEL ON ‘DEL’ ONLY.
+
+2358 86 5B LDAA at .
+B35A 97 34 STAA DELFLG
+
+g35C BD 31 BSR OUTCHI
+
+Q35E AG Ol SKWDEL LDAA 1,x 4
+2362 8D 2D BSR OUTCH1
+
+@362 28 Ag BRA NEXTC
+
+ 
+PAGE 12 LISP M6882 MICRO ASSEMBLER
+
+*
+
+* GET ONE CHAR. FROM INPUT BUFFER
+*
+
+“9364 DE 32 mA GETC  LDX CP ARG
+
+8366 AG OG LDAA B,Xx GET CHARACTER FROM INPUT BUFFER
+a368 81 3D CMPA #$D END OF LINE?
+@36A 27 94 BEQ INPSTR YES,GO READ NEXT LINE
+@36C AS 21 LDAA 1,X NO,GET NEXT CHAR.
+B36E 08 INX
+@36F DF 32 STX CP ipse
+@371 81 2c CMPAo#', MAKE A ‘SPACE' OF THE
+@373 27 28 BEQ SP FOLLOWING CHARACTERS:
+2375 81 29 CMPA #9 ‘KOMMA’ ‘TAB’ CARRIAGE RET."
+2377 27 BA BEQ SP
+g379 81 aD CMPA = #3D
+933 26 2 BNE NOSP
+G37 86 23 SP LDAA #$22
+@37F 39 NOSP «RTS
+*
+* OUTPUT ONE CHAR.
+*
+0388 7 8037 OUTCK INC CCOUNT
+_ 2383 81 20 CMPAo#" SPACE?
+9385 26 28 BNE OUTCHI
+@387 96 37 LDAA  CCOUNT YES,MORE THAN 55 CHAR, ON ALINE?
+@389 81 37 CMPA #55
+“2388 2E 2c BGT CRLF = YES, OUTPUT A CR & LF.
+238D 86 28 LDAA # NO
+@38F DF 2a OUTCH! STX TEMPX
+@391 DE 35 LDX DEVICE
+2393 EE 92 LDX 2,X
+2395 AD aa JSR a,X
+0397 DE 2A LDX TEMPX
+2399 39 RTS
+*
+* INPUT ONE CRARACTER
+*
+239A DF 2A INCH STX TEMPX
+@39C DE 35 LDXx DEVICE
+Q39E EE 20 LDX ,X
+Z3A8 AD O@ JSR BX
+O3A2 DE 2A LDX TEMPX
+
+2344 39 RTS
+
+ 
+PaGE 15 LISP M6828 MICRO ASSEMBLER
+
+‘
+
+* "
+* PRINT MESSAGE ON DEV #1 -
+
+x
+@3AS DF 2c PMESSG STX MP
+@3A7 DE BE LDx N
+@3A9 8D 4C BSR ASSIGN ASSIGN DEV #1
+Q3AB 8D ac BSR CRLF
+@3AD DE 2¢ LDX MP
+Q3AF AG 29 PMESGL LDAA O,X
+0381 8D cD BSR OUTCH PRINT STRING
+03B3 6D a2 TST a,x
+@3B5 28 INX
+@3B6 2A FT BPL PMESG1
+B3B8 39 RTS
+
+*
+* NEW LINE
+*
+
+O3B9 36 CRLF PSHA
+
+@3BA 86 2D LDAA #SD CARRIAGE RETURN
+
+23BC 8D C2 BSR OUTCH & LINE FEED ON TTY.
+
+23BE 86 BA LDAA aSA .
+9309 8D BE BSR QUTCH
+
+@3C2 7F @837 CLR CCOUNT
+
+93C5 32 PULA .
+
+@3C6 39 RIS
+
+ 
+PAGE 14
+
+2307
+Q3C9
+3CA
+a3cc
+Q3CE
+9308
+@3D1
+@3D5
+@3D4
+B3D6
+93 D8
+Q3DA
+230C
+@30E
+a3 OF
+83 £2
+
+Q3E5
+- B3E6
+"S3E8
+Q3EA
+Q3EC
+“Q3EE
+23EF
+O3FI
+@3F2
+B3F4
+G3F6
+
+ 
+
+DF
+3
+
+2B
+E6
+37
+E6
+37
+DS
+ET
+De
+E7
+DE
+39
+CE
+TE
+
+32
+E6
+D7
+E6
+D7
+33
+E7
+33
+E7
+DE
+39
+
+LISP
+
+2A
+
+aA
+Mt
+al
+
+20
+
+2A
+22
+2B
+Gl
+
+2A
+
+BD6E
+8235
+
+62
+2A
+83
+2B
+
+92
+
+83
+2A
+
+M6820 MICRO ASSEMBLER
+
+*
+
+* PUSH X ONTO STACK
+
+*
+PUSHX STX
+TSX
+CPX
+BMI
+LDAB
+PSHB
+LDAB
+PSHB
+LDAB
+STAB
+LDAB
+STAB
+LDX
+RTS
+STKOVF LDX
+JMP
+*
+
+TEMPX
+
+LIMIT
+STKOVF STACK OVERFLOW!
+1,X SAVE RETURN ADDRESS
+
+8,X
+
+TEMPX PLACE X ONTO STACK
+2X
+
+TEMPX+1
+
+1,x
+
+TEMPX
+
+#50 MS
+SY SERR
+
+* PULL X FROM STACK
+*
+
+PULLX TSX
+LDAS
+STAB
+LDAB
+STAB
+PULB
+STAB
+PULS
+STAB
+LDX
+RTS
+
+2,x GET X FROM STACK
+TEMPX
+
+3,X
+
+TEMPX+1
+
+2,X REPLACE RETURN ADDRESS
+
+3,X
+TEMPX
+PAGE 15° LISP M6822 MICRO ASSEMBLER
+
+“
+
+*
+* ASSIGN DEV. # TO INPUT- AND OUTPUT HANDLER ‘
+* X MUST POINT TO AN NUMERIC ATOM.
+* IF X IS NIL THEN ASSIGN DEV # 1
+. *
+Q3F7 C6 Bl ASSIGN LDAB #1
+O3F9 DF 28 STX SAVEX SAVE ATOM POINTER
+O3FB 27 th BEQ DEVI
+Q3FD EE 99 LDX 8,x
+B3FF 29 DEX
+2400 26 21 BNE ID.ER NON NUMERIC DEV. #
+@492 DE 28 LDx SAVEX
+9424 EE 22 LDXx 2,x
+BABE AG 2B LDAA 8,Xx
+8428 26 19 BNE ID.ER DEV. # > 2561
+ZaQA ES @1 LDAB 1,X
+G4ac 27 15 BEQ ID.ER DEV. # = @!
+GAVE CE OOFE DEVI LDX #DEVTBL-8
+2411 86 88 NXTDEV LDAA #8 OK SO FAR!
+B43 08 X8 INX NOW LOOKUP DEV.TABLE
+@4l4 4A DECA ,
+@415 26 FC BNE x8
+2417 AG 2G LDAA 8,Xx
+O4l9 27 2B BEQ ID.ER ZERO ENDS THE THE TABLE :
+2413 54 DECB .
+@4lC 26 F3 BNE NKTDEV
+BALE DF 35 STK DEVICE SET LINK ADDRESS '
+0423 DE 14 LDX ARG
+B422 39 RTS
+@423 CE 2D74 **7ID.ER Lox #ID.MS
+2426 TE 244E JMP FATAL
+*
+* GET ONE CHAR. BUT SKIP SPACES.
+*
+2429 BD @364¢4' GETCS JSR GETC 846
+2420 81 20 CMPA a
+@42E 27 FS BEQ GETCS
+0438 39 RTS
+*
+* PUT BACK ONE CHAR. IN LNPUT BUFFER
+*
+BA31 DE 32.” PUTBAK LDX oP
+2433 29 DEX
+3434 DF 32 STX cP
+
+B456 39 RTS
+
+ 
+PAGE 16 LISP M6882 MICRO ASSEMBLER
+
+x
+* (READ DEV)
+
+_ * READ ONE S-EXPRESSION FROM ‘DEV*
+*
+
+8437 8D BE READ BSR ASSIGN BCE,
+439 8D EE READE BSR GETCS o4)
+@43B 81 28 CMPA ax
+@43D 27 15 BEQ S.EXPR EXPRESSION BEGINS WITH: ¢
+O43F Bl 2E CMPA #".
+a44l 27 28 BEQ SN.ER
+0443 81 29 CMPA #*)
+B445 27 BA BEQ SN.ER  . AND ) ARE ILLEGAL NOW
+2447 8D ES BSR PUTBAK
+449 28 52 BRA READIE ATOMIC EXPRESSION,
+@44B CE @CCE SN.ER  LDX ¥SN.MS
+Q44E BD 23a5 FATAL JSR PMESSG
+B451 7E B19 JmP LISP
+@454 BD a429 S.EXPR JSR GETCS
+2457 81 2E CMPA .
+. 9459 27 F2 BEQ SN.ER DOT IS ILLEGAL NOW!
+@45B DE OE RDLIST LDX N EXPRESSION IS A LIST STRUCTURE.
+a45D 81 29 CMPA #")
+“Q45F 27 19 BEQ S.END
+Q461 81 2E CMPA #",
+0463 27 16 BEQ DOT DOT NOTATION.
+6465 8D CA BSR PUTBAK
+0467 8D DB BSR READE READ NEXT FORM
+@469 BD 9307 JSR PUSHX
+@46C 8D BB BSR GETCS
+@46E 8D EB BSR RDLIST AND GO IN RDLIST AGAIN.
+2470 DF 16 STX ARG2
+8472 BD O3E5 JSR PULLX
+G475 DF 14 STX ARGI
+2477 8D O76A JSR cons NOW CONS ALL FORMS TO A LIST
+@47A 39 S.END RTS
+478 8D BC DoT BSR READE READ LAST FORM
+2470 DF 16 STX ARG2
+g47F BD AS BSR GETCS
+Z48i 81 29 CMPA #") WICH MUST BE CLOSED WITH: >
+. B483 26 C6 BNE SN.ER
+9485 DE 16 LDX ARG2
+
+- G487 39 RTS
+
+ 
+PAGE i? LISP M6820 MICRO ASSEMBLER
+
+*
+* CREADCH DEV)
+
+* READ ONE CHARACTER FROM “DEV'
+*
+
+R
+
+@488 BD 83F7 EADCH JSR ASSIGN
+@48B BD 3364 JSR GETC GET ONE CHAR.
+948E DE 32 LDX cp
+Q492 DF 2E STX PNAME
+2492 TE 8547 JMP AATOM AND BUILD AN ATOM OF IT.
+2495 TE 0443 SN.ERL SMP SN.ER
+*
+
+* (READ! DEV)
+* READ AN ATOM FROM ‘DEV’.
+
+*
+2498 BD O3F7 READ! JSR ASSIGN .
+249B BD 9429 READIE JSR GETCS
+BASE GE 32 LDX cP
+443 DF 2E STX PNAME ‘PNAME' POINTS TO BEGIN OF ATOM
+O4A2 81 27 CMPA en
+404 27 TF BEQ SQUOTE :
+24a6 BL 22 CMPA een ‘ AND “ ARE SUPER-QUOTE CHAR.
+2408 27 7B BEQ SQUOTE
+BAKA OS DEX .
+@4a3 DF 32 STX cP .
+44D BD 9364 CV*RDATOM JSR GETC FIND END OF ATOM
+0480 81 28 CMPA ¢ >
+B4B2 27 ac BEQ ENDATM .
+04B4 81 29 CMPA #")
+0436 27 28 BEQ ENDATM
+438 81 22 CMPA a
+@4BA 27 04 BEQ ENDATM
+O4BC 81 2E <u COMPA ee
+B4BE 26 ED BNE RDATOM
+@4C@ BD O431 <2" ENDATM JSR PUTBAK IF FIRST CHAR. IS + OR -
+@403 DE 2E LDX PNAME OR 9-5 THEN ATOM IS NUMERIC.
+@4c5 a9 DEX
+Z4CE 9C 32 CPX cP ANY ATOM?
+24C8 27 CB BEQ SN.ERI NO
+B4CA 28 INX
+@4CB 5F CLRB
+acc AG 22 LDAA a,x
+@ACE 81 2B CMPA #'+
+4D 27 OF BEQ NATOM
+gabe 16 TAB
+gad3 81 2D CMPA ale .
+Q405 27 OA BEQ NaTOM
+O4D7 5F MEATM CLRB
+g4D8 81 32 CMPA ea
+g4DA 2D & BLT AATOM .
+gadC B81 39 CMPA #"9 ,
+@4DE 2E 67 BGT AATOM
+
+@4E2 29 DEX .
+
+ 
+PAGE 18 LISP M6889 MICRO ASSEMBLER
+
+*
+* ATOM IS NUMERIC,
+
+*
+@4E1 D7 31 COB natom STAB SIGN
+
+Q4ES 4F CLRA
+G4E4 5F CLRB
+G4ES D7 24 STAB NUM 1
+Q4E7 D7 25 STAB NUMI+1
+Q4ED 9C 32 NXTDIG CPX cP END OF ATOM?
+g@4E8 27 27 BEQ BLDNMB
+@4ED 28 INX
+@4EE AG OB LDAA 8,X NO,GET NEXT DIGIT
+@4F2 B81 30 CMPA #°O AND CHECK IF 2-9,
+a4F2 2D 28 BLT IN.ER
+B4F4 Bl 39 CMPA #9
+g4F6 2E 27 BGT IN.ER
+Q4F8 84 OF ANDA #SF
+Q4FA 97 26 STAA Num2
+@4FC 96 24 LDAA NUM 1 NOW SHIFT DIGIT INTO NUMBER
+@4FE D6 25 LDAB NUMi+i JUST READ SO FAR,
+2520 58 ASLB « .
+Q521 49 ROLA ma
+g522 58 ASLB # L
+9593 49 ROLA
+°g5@4 DB 25 ADDB NUM1+1 £4 Margy ae Wares |
+2586 99 24 ADCA NUM
+0508 58 ASLB
+“g5a9 49 ROLA
+250A DB 26 ADDB num2
+250C 89 3B ADCA #0
+B5QE 97 24 STAA NUM I
+g51@ D7 25 STAB NUM L+1
+g512 28 D5 BRA NXTDIG
+@514 7D 2a31 BLDNMB TST SIGN
+Q517 27 a3 BEQ POSN
+2519 BD 2034 JSR NEG NEG. NUMBER IS TWO'’S COMPL.
+Q51C 7E SCAB POSN JP PUTIN
+B51F CE aDL3 IN.ER  LDX #INGMS
+
+8522 7E B44E JMP FATAL
+
+ 
+PAGE 19 LISP M6889 MICRO ASSEMBLER
+
+*
+* ATOM IS SUPER QUOTED.
+
+*
+@525 97 31 SQUOTE STAA SIGN SAVE QUOTE CHAR,
+
+527 28 INX
+
+$528 DF 2E SIX PNAME
+
+@52A 39 DEX
+
+252B 88 BQ INX .
+
+@52C AG 2B LDAA ,X NOW READ ALL CHAR.
+
+@52E DF 32 STX cp BETWEEN THE QUOTES,
+
+9530 81 OD CMPA #0 A CR ALSO DELIMITS THE QUOTING
+
+2532 27 13 BEQ AATOM
+
+@534 91 3t CMPA SIGN
+
+9536 26 F3 BNE Ba
+
+2338 86 22 LDAA #” DELETE LAST QUOTE CHAR.
+
+G53A AT OG STAA a,x IN THE BUFFER,
+
+@53C @9 DEX
+
+@53D OF 32 STX cp
+
+Q53F 28 INX
+
+8542 9C 2E CPX PNAME IS THERE A QUOTED STRING?
+
+@542 26 03 BNE AATOM .
+9544 DE OE LDX N NO,RETURN NIL
+
+@546 39 RTS
+
+ 
+PAGE 2@ LISP M68@2 MICRO ASSEMBLER
+
+CALL HASH
+. éxr W 28e 57-2
+Wk g
+* Sekt Me og Ho C2(K)
+
+: * ATOM IS ALPHA NUMERIC. NY wor Dt
+. * thay £4 Vary B
+
+@547 CE BDAC wat AATOM  LDX #OBLIST mov
+
+@54A EE @2 LDX 2,Xx bwi ot
+
+@54C EE ¢2 LDX 2,Xx GET VALUE OF OBLIST
+
+@54E DF 24 STX NUM 1 .
+
+6552 EE oo LDX a,x
+
+9552 DF iE NXTOBJ STX OBLSTP
+
+9554 EE OO LDX a,x GET ATOM FROM OBLIST
+
+2556 EE 6a LDX aX AND GET ITS PRINTNAME
+
+2558 29 DEX
+
+@559 OF 20 STX oP
+
+@55B DE 2E LDX PNAME
+
+@55D DF 22 STX AP
+
+@55F DE 22 NxT2C  LDX oP Bee
+
+a561 27 2E BEQ NOMTCH !
+
+@563 AG 22 LDAA a,x
+
+2565 E6 31 ~  LDAB 1,X GET 2 CHAR. FROM ATOM ON OBLIST
+
+0567 EE @2 LDX 2,x .
+2569 DF 22 STX OP sas tEce
+
+5@ DE 22 LDXx AP JACS
+
+Z56D Al 3B CMPA a,x AND COMPARE WITH 2 CHAR,
+ O56F 26 23 BNE NOMTCH OF ATOM IN INPUT BUFFER
+
+‘d571 9C 32 CPX cP Loe
+
+8573 27 13 BEQ MATCH eR bo 07
+
+@575 El 31 ~ CMPB MX ea poe
+“2577 26 18 BNE NOMTCH .*
+
+2579 88 INX
+
+257A 28 INX
+
+0573 DF 22 STX AP iAae pave
+
+257D 39 DEX
+
+@S7E 9C 32 CPX cp
+
+2589 26 DD BNE NXT2C
+
+9582 DE 20 LDX oP
+
+584 26 2B BNE NOMTCH
+
+2586 C6 EB LDAB #F
+
+2588 Cl 8a MATCH  CMPB #F
+
+B58A 26 05 BNE NOMTCH
+
+258C DE 1E LDX OBLSTP ATOM IS ON THE OBLIST
+
+O58E EE 0d LDXx a,x RETURN ITS POINTER AS VALUE,
+
+8598 39 RTS
+
+ 
+PAGE 21
+
+2591
+2593
+2595
+
+9597
+@599
+@59B
+B59E
+B5Ag
+B5A2
+Z5A3
+@S5A5
+B5A7
+25A9
+@5AA
+B5aC
+SAF
+53 1
+@5B3
+@5B 5
+25B 7
+@SBA
+B5BC
+S53E
+OSBF
+@5cl
+g3ce
+@5C4
+O5C6
+e508
+B5CA
+@5CC
+25 CE
+35D1
+@5D3
+2505
+@5D7
+@5D9
+
+DE
+EE
+26
+
+OF
+OF
+BD
+DF
+DE
+as
+DF
+96
+98
+46
+24
+Bo
+DF
+DE
+cé
+20
+BD
+DF
+DE
+29
+E6
+a9
+AS
+OF
+DE
+a7
+ET
+DE
+BD
+6c
+DE
+sc
+26
+DE
+
+LISP
+
+1E NOMTCH
+be
+BB
+
+*
+
+M6828 MICRO ASSEMBLER
+
+Lox
+LDX
+BNE
+
+OBL STP
+2,X
+NXTOBY
+
+* ATOM NOT ON OBLIST
+*
+
+14
+16
+B76A
+
+1g fae
+
+32
+
+22
+2F
+23
+
+2B
+276A
+16
+22
+Ba
+@A
+276A
+16
+22
+
+BLDATM
+
+ao
+OLD
+
+ae
+22
+16
+2a
+al
+18
+O77E
+2!
+22
+2E
+DE
+18
+
+@5D3 DF 14
+
+e@5D0D
+@5DF
+Q@5EL
+Q5E3
+@5E6
+Q5EZ
+Q5EA
+5ED
+@5EF
+
+dE
+EE
+DF
+BD
+DF
+DE
+BD
+DE
+39
+
+24
+2a
+16
+QT6A
+16
+24
+O77E
+18
+
+STX
+STX
+JSR
+
+~ STIX
+
+LDX
+INK
+STX
+LDAA
+EQRA
+RORA
+Bcc
+JSR
+STX
+LDX
+LDAB
+BRA
+JSR
+STX
+LDX
+DEX
+LDAB
+DEX
+LDAA
+STX
+LDX
+STAA
+STAB
+LDX
+JSR
+INC
+LOX
+CPX
+BNE
+LDX
+STX
+LDXx
+LDX
+STX
+JSR
+STX
+LOx
+JSR
+LDX
+RTS
+
+ARGI
+ARG2
+CONS
+ARGS
+cP
+
+AP
+PNAME+1
+AP+1
+
+BLDATM
+CONS
+ARG2
+AP
+
+#F
+
+opD
+CONS
+ARG2
+AP
+
+a,x
+
+B,X
+AP
+ARG2
+4X
+1,x
+ARGS
+RPLACA
+
+NO MATCH SO FAR, .
+TAKE NEXT ATOM FROM OBLIST.
+
+BUILD ATOM CELL
+
+EVEN NUMBER OF CHAR.
+ODD NUMBER OF CHAR,
+$0 ADD A FILL CHAR.
+
+NOW BUILD AN ATOM,
+WITH 2 CHAR, PER CELL .
+
+UPDATE ATOM-CELL
+AND SET ATOM-MARK
+
+AND ADD IT ON TOP OF THE OBLIST
+
+UPDATE OBLIST!
+VALUE IS THE NEW ATOM
+
+ 
+PAGE 22 LISP M6889 MICRO ASSEMBLER
+
+*
+* (OPEN DEV FILENAME)
+*
+* OPEN A FILE ON “DEV* WITH ‘FILENAME’,
+* ON NON FILE ORIENTED DEVICES,
+* THIS CALL ONLY INITIALISES THE HANDLER
+*
+@5F8 BD 23F7 OPEN JSR ASSIGN
+@5F3 DE 35 LDX DEVICE GET OPEN-LINK FOR "DEV'
+@5F5 EE @4 LDX A,X
+@5F7T SE 62 JMP B,X AND GO TO REQUESTED HANDLER
+*
+* (CLOSE DEV)
+*
+* CLOSE FILE ON “DEV‘
+*
+@5F9 BD O3F7 CLOSE JSR ASSIGN
+@5FC DE 35 LDX DEVICE
+Q5FE EE 26 LDX 6,X%
+
+@622 6E 29 JMP a,x
+
+ 
+PAGE 23 LISP 46882 MICRO ASSEMBLER
+
+* .
+* (PRINT X DEV) .
+
+*
+8602 DE 16 PRINT LDX ARG2
+
+2604 BD O3F7 JSR ASSIGN
+
+8687 4F PRINTE CLRA
+
+asee 36 PSHA BOTTOM OF STACK IS NIL.
+
+2629 36 PSKA
+
+@69A DF 14 ¢°8 PRINT2 STX ARGI
+
+@6ac BD e6Dc JSR ATOM ATOMIC?
+
+B6GF 27 32 BEQ PRINT? NO
+
+@611 DE 14 LDX ARG
+
+3613 8D Al BSR PRINIE YES,PRINT ATOM
+
+$615 BD @3E5 PRINTS JSR PULLX
+
+@618 26 Ol BNE PRINTS
+
+@6LA 39 RTS
+
+@61B EE a2 PRINT4 LDX 2,Xx GET CDR-PART
+
+@61D DF 14 STX ARGI
+
+Q61F 27 18 BEQ PRINTS .
+e621 BD 260c JSR ATOM CDR PART ATOMIC?
+
+@624 27 1A BEa PRINTS NO
+
+ZSZ6 86 2¢ LDAA at .
+2628 BD 0380 JSR OUTCH ‘
+8623 86 2E LDAA ,
+
+@62D BD 2388 JSR OUTCH YES,PRINT A DOT ,
+8630 86 2a LDAA # ;
+8632 BD 2382 JSR OUTCH
+
+2635 DE 14 LDX ARG]
+
+8637 8D 1D BSR PRINIE AND PRINT ATOM
+
+8639 86 29 PRINTS LDAA #")
+
+2633 BD 2388 JSR OUTCH
+
+O63E 22 DS BRA PRINTS
+
+B64e 86 29 PRINTS LDAA #
+
+6642 8C FCB $8C SKIP
+
+2643 86 28 ©7L PRINTT LDAA arc
+
+2645 BD 0380 JSR OUTCH
+
+2648 DE 14 LDx ARGL
+
+264A BD 9307 JSR PUSHX
+
+zé4D EE 20 LDX 8,X
+
+264F 26 BS BRA PRINT2
+
+ 
+PAGE 24 LISP M6802 MICRO ASSEMBLER
+
+* (PRINI X DEV)
+
+*
+
+* PRINT ‘PRINTNAME’ OF ATOM X
+
+* OR NUMERIC VALUE IN CASE OF A NUMBER
+*
+
+@651 DE 16 PRINL LDX ARG2
+Q653 BD @3F7 JSR ASSIGN
+G656 BD B29) PAF PRINIE JSR ABORT
+g659 DE 14 LDX ARG!
+B65B AG Bl LDAA 1,X
+Q65D 46 RORA
+B65E 24 6F BCC NA.ER NOT ATOMIC
+Q660 EE 22 LDX a,x GET LINK TO PRINT NAME
+B662 09 DEX CLEAR ATOM MARK
+e663 27 11 BEQ PRNMB NUMERIC!
+2665 AG G2 FAC PRCHAR LDAA G,X PRINT CHAR.STRING UNTIL
+2667 BD 8383 JSR OUTCH FILLCHAR, OR NIL
+B66A AG 31 LDAA 1,X
+QE6C 2B 93 -BME- ~~ -BENE-
+Q66E BD 2386 JdSR-°e  OUTCH
+. @671 EE 22 DONE —-LBX 2,x
+3673 26 FO BNE PRCHAR
+
+@675 39 RTS VALUE OF PRIN1 IS NIL
+
+ 
+PAGE 25 LISP M6E22 MICRO ASSEMBLER
+
+* .
+* ATOM IS NUMERIC
+
+x
+2676 DE 14 PRAMB LDXx ARG]
+@678 EE #2 . LDX 24% GET NUMBER
+OS7A E6 @l LDAB®& 1,X
+@67C AG 80 LDAAD @,X
+267E 2A 2C BPL Pos
+@683 86 20 LDAA #t- NEGATIVE NUMBER,
+9682 BD 2388 JSR OUTCH PRINT MINUS SIGN
+2685 AG 28 LDAA 8,Xx
+@687 E6 BL LDAB 1,X
+2689 BD @C34 JSR NEG AND NEGATE NUMBER
+@68C CE @6C5 POs LDX #DECTBL
+@68F 7F 8022 CLR AP
+2692 7F a2@31 DECI CLR SIGN BINARY TO DEC CONVERSION.
+8695 TC 2831 DEC2 INC SIGN WITH LEADING ZERO SUPPRESSION.
+2698 EG Ol SUBB 1,X
+QE9A AZ BE SBCA G,Xx
+@6sc 2A FT BPL DEC2
+@69E EB Bt ADDB 1,X .
+@6A2 AS 20 ADCA BX
+B6A2 36 PSHA
+@6A3 37 PSHB -
+@6A4 96 31 LDAA SIGN *
+@GAG 4A DECA
+B6A7 26 05 BNE BECS
+BEAD 7D B222 TST aP
+Q6AC 27 G7 BE@ DEC4 LEADING ZERO
+26AE 8B 30 DECS3 ADDA #°B MAKE ASCII
+366 97 22 STAA AP
+G2 BD 0380 JSR OUTCH AND PRINT
+BES 28 DEC4 INx
+Cs 28 INX
+2B7 33 PULB
+S6BS 32 PULA
+2689 6D @1 TST 1,X AT END OF TABEL?
+8638 26 DS BNE DEC 1
+BO 17 TBA
+QE 8B 30 ADDA #'O YES,PRINT LAST DIGIT.
+@6C8 BD 2382 JSR OUTCH
+26C3 29 IC BRA FALSE
+S605 27 DECTBL FDB 12900,1200,120,129,2
+@6CF CE 2CDA NA WER LDX #NAMS :
+g6D2 BD @3A5 PNTARG JSR PMESSG ,
+@6D5 DE 14 LBx ARG1
+g@6D7 BD 367 JSR PRINTE PRINT ARGUMENT :
+Q@SDA 22 13 —BRA —FeRPaI— .
+
+Lisp .
+
+ 
+PAGE 26 LISP
+
+@6Dc
+26DE
+@6DF
+O6E1
+@6ES
+
+26E4
+Q@6E6
+
+@6E7
+@6E9
+@6EB
+SEE
+
+Q6EF
+Bere
+26F5
+
+AG
+46
+25
+DE
+39
+
+EE
+as
+
+9¢
+26
+CE
+39
+
+BD
+BD
+20
+
+at
+
+aA
+OE
+
+ag
+
+GE
+Fé
+2dcc
+
+O3F7
+2389
+EA
+
+M68@@ MICRO ASSEMBLER
+
+a
+* CATOM X)
+*
+* IF X IS ATOMIC THEN TRUE ELSE NIL
+*
+ATOM LDAA 1,X
+RORA
+BCS TRUE CELL IS ATOMIC
+FALSE  LDX N
+RTS
+
+*
+* = CNUMBER X)
+
+*
+
+* IF X IS A NUMBER, VALUE IS TRUE; ELSE NIL.
+*
+
+N
+
+UMBER LDX Q,x
+DEX
+
+*
+% CNULL X)
+
+*
+
+* IF X IS NIL RETURN 'T°;ELSE NIL.
+*
+
+N
+
+ULL CPX N
+BNE FALSE
+
+TRUE LDX #T
+RTS
+
+(TERPRI DEV)
+
+*
+*
+*
+* TERMINATES PRINTLINE (CR & LF)
+* VALUE IS NIL
+
+*
+
+T
+
+ERPRI JSR ASSIGN
+JSR CRLF
+BRA FALSE
+
+ 
+PAGE 27 LISP M6802 MICRO ASSEMBLER
+
+* Ps
+* (TEREAD) :
+*
+
+* RESET INPUT BUFFER
+
+*
+Q6F7 CE 8238  TEREAD LDX #FIRSTC
+O6FA DF 32 STX cP
+@6FC 86 BD LDAA ss # SD
+Q6FE A7 92 STAA 8,X
+2720 22 DF BRA FALSE
+*
+* (EQ X YD
+*
+* IF KX IS EQUAL TO Y THE VALUE IS "T’, OTHERWISE NIL
+*
+0722 9C 16 EQ CPX. — ARG2
+8724 27 ES BEQ TRUE
+2786 EE 98 LDX a,x
+3798 99 DEX
+2709 26 D6 BNE | FALSE
+3798 DE 16 LDX ARG2 :
+B72) EE ao “Dx a,x
+273F a9 DEX
+2719 26 CF BNE FALSE -
+a712 DE 14 LDX ARG1 .
+2714 BD 2BD4 JSR GET2N< IF BOTH ARGUMENTS ARE NUMERIC
+2717 EB @1 SUBB 1,x THEN COMPARE THERE VALUES
+A719 26 C6 BNE FALSE ,
+Z71B A2 0B SBCA 2X . su
+OND 26 C2 BNE FALSE . DE» Numi
+
+Q71F 20 CA BRA TRUE HE = Mum
+
+ 
+PAGE 28 LISP M6828 MICRO ASSEMBLER
+
+*
+* (QUOTE X)
+*
+* PREVENT X FROM EVALUATION.
+* VALUE IS X,
+*
+@721 DE 14 QUOTE LDX ARGL
+2723 27 G2 BEQ NO.ARG
+@725 EE 20 LDX Xx
+Q727 39 NO.ARG RTS
+
+*
+* (GREATERP X Y)
+
+*
+
+* IF X >= Y THEN TRUE ELSE FALSE
+*
+
+G
+
+728 BD @BD4 REATR JSR GET2N GET 2 VALUES
+a72B Al 0 CMPA 3, x
+g72D 2D B2 BLT FALSE .
+372F 2E BA BGT TRUE A>m = ne Ank
+2731 El 2l CMPB «1X
+| 8733 22 86 BHI TRUE
+3735 22 AA BRA FALSE
+ae
+* (FUNCTION X)
+. ae
+%* RETURNS THE LIST:
+%  CFUNARG X ALIST)
+. *
+2737 DF 18 FUNCTI STX ARGS
+2739 DE 16 LDx ARG2
+0733 DF 14 STX ARG L
+273D DE QE LDX N
+73K DF 16 STX ARG2
+7al gD 27 BSR CONS (CONS ALIST NIL)
+743 DF 16 STX ARG2
+3745 DE 18 LDX ARGS
+747 EE 20 LDx 2,X
+2749 DF 14 STX ARGL
+743 BD 1D BSR CONS (CONS x (CONS ALIST NIL)
+B74D DF 16 STX ARG2
+274 CE E88 LDX # FUNARG
+G72 DF iA STX AGL
+2754 22 1A BRA CONS (CONS FUNARGC(CONS XCCONS ALIST B
+*
+* ¢ALIST)
+. a
+* RETURNS THE CURRENT ASSOCIATION LIST AS VALUE.
+> *
+"9756 DE 16 ALIST LDX — ARG2
+
+#758 39 RTS
+
+ 
+PAGE 29° LISP M6886 MICRO ASSEMBLER
+
+ 
+
+* .
+* (CAR X)
+*
+2759 AG Bl CAR LDAA 1,Xx
+esa 44 LSRA
+BIC 25 OS BCS AA.ER CAR OF AN ATOM IS ILLEGAL.
+C75E EE 80 LDX @,X
+@768 39 RTS
+6761 CE BDa7 AA.ER  LDX #AA MS
+@764 7E @6D2 ump PNTARG
+*
+* (CDR X)
+*
+@767 EE 2 COR LDX 2,X
+B769 39 RTS
+*
+* (CONS X YD
+*”
+* VALUE IS A LIST OF WHICH THE CAR-PART IS X
+* AND THE CDR-PART IS ¥
+* .
+#s/ @76A BD BIcl 84 cons JSR CELL GET A NEW CELL
+76D 96 14 LDAA ARGL
+O76F DE 15 LDAB ARGI+1
+BI7TL AT GO STAA a,X ARG! TO CAR-PART :
+2773 ET @1 STAR 1,Xx
+*
+* (RPLACD X Y) .
+*
+%* REPLACE CDR-LINK OF X BY Y
+*
+8775 96 16 RPLACD LDAA ARG2
+2777 DE IT LDAB ARG2+1
+B779 AT 22 STAA 2,%
+2773 E7 03 STAB 3,X
+277D 39 RTS
+*
+* (RPLACA X Y)
+ae
+* REPLACE CAR-LINK OF X BY Y
+*
+OTTE 96 16 RPLACA LDAA ARG2 ©
+2788 D6 17 LDAB ARG2+1
+2782 AT 39 STAA a,x
+0784 ET 31 STAB 1,Xx
+
+3786 39 RTS
+
+ 
+PAGE 34 LISP (16828 MICRO ASSEMBLER
+
+*
+: * (SETQ X Y)
+*
+* X GETS AS VALUE, THE VALUE OF Y
+* VALUE OF SETQ IS THIS VALUE!
+*
+$787 BD B3C? SETQ JSR PUSHX
+978A 27 3E BEQ ARG?
+a78C EE 82 LDX 2,X
+ZIBE 27 3A BEQ ARG?
+@790 EE 2a LDX 8,Xx GET Y.
+@792 DF 14 STX ARG]
+B794 DE 16 LDX ARG2
+2796 BD @3C7 JSR PUSHX PUSH A-LIST
+g799 DE 14 LDX ARG!
+@793 BD BaB9 JSR EVAL EVALUATE Y
+QI9E DF 18 STX ARGS
+Q7AG BD @3E5 JSR PULLX PULL UP A-LIST.
+G7A3 DF 16 STX ARG2
+27A5 BD O35 JSR PULLX PULL UP ARG-LIST.
+@7Ag EE 99 LDX a,% GET X
+Q7aaA DF 14 STX ARGL
+ZAC BD 0873 JSR SASSOC ON A-LIST?
+_ BTAF 27 BE BEQ SETAPV NO.
+*OBl DF 14 STX ARG! YES REPLACE
+2B3 DE 18 LDX ARGS ASSOCIATED VALUE BY Y.
+235 DF 16 STX ARG2
++3737 DE 14 LDX ARG!
+2B9 BD 2775 JSR RPLACD
+273C EE 82 LDX 2,X RETURN WITH Y.
+BE 39 RTS
+QBF DE 18 SETAPV LDX ARGS NOT ON A-LIST; SO PUT THE
+atc DF 16 STX ARG2 VALUE, UNDER AN APVAL IND.,
+BIC3 CE GERA LDX #APVAL ON ATOM’ PROP-LIST.
+Z7C6 DF 1g STX ARGS THIS 1S DONE BY PUTPROP.
+O1C8 24 9E BRA PUTPRP
+O7CA CE @D4G = ARG? LDX #TLA.MS
+
+@7CD 7E @44D JMP FATAL
+
+ 
+PAGE 31 LISP M6802 MICRO ASSEMBLER
+
+CPUTPROP ATOM PROPERTY INDICATOR)
+
+*
+*
+*
+* PUT 'PROPERTY' ON PROPERTY-LIST OF ‘ATOM‘
+* TOGETHER WITH ‘INDICATOR’.
+
+*
+
+6
+
+@7D2 DE 14 ETIND LDX ARGI GET NEXT IND. ON
+
+@7D2 EE 62 LOX 2,X PROPERTY LIST
+
+@7D4 EE 22 LDX 2,X
+
+@ID6 DF 14 STX ARG]
+
+@7D8 DE 14 PUTPRP LDX ARG1
+
+BIDA EE 82 LDX 24X
+
+B7DC 27 12 BEQ NO.PRP PROPERTY-LIST EXHAUSTED
+
+GIDE EE 08 LDX OX GET INDICATOR.
+
+@7Ed 9C 18 CPX ARGS IS IT THE REQUESTED IND.?
+
+@7E2 26 EC BNE GETIND NO!
+
+@7E4 DE 14 LDx ARGI YES,REPLACE PROP, ASSOCIATED
+
+Q7ES EE 82 LOXx 25X WITH THIS INDICATOR.
+
+O7E8 EE 02 LOX 2,X
+
+Q7TEA BD O77E JSR RPLACA
+
+@7ED EE 30 LEX @,X AND RETURN WITH PROPERTY. .
+27EF 39 RTS
+
+O7FO DE 14 NO.PRP LDX ARGI NO SUCH INDICATOR .
+@7F2 BD 2307 JSR PUSHX ON PROPERTY-LIST .
+Q7F5 DE 16 LDx ARG2
+
+ZIFT DF 14 STX ARGI
+
+Z7F9 DE BE LDX N NOW APPEND THE NEW PROP. ,
+Q7FB DF 16 STX ARG2 TOGETHER WITH THE IND.
+
+@7FD BD Q76A JSR CONS TO THE PROPERTY-LIST.
+
+8820 DF 16 STX ARG2
+
+9802 DE 18 LDX ARGS
+
+@8@4 DF 14 STIX ARGI
+
+2826 BD 276A JSR cONS
+
+6899 DF 16 STX ARG2
+
+0828 BD S3E5 JSR PULLX
+
+28ZE BL 8775 JSR RPLACD
+
+@811 EE Ze LDXx 2yX
+
+813 EE 82 LDXx 2,Xx
+
+2815 EE 9@ LDX B,X RETURN WITH PROP.
+
+6817 39 RTS
+
+ 
+PAGE 32 LISP M6820 MICRO ASSEMBLER
+
+*
+* (COND (X YP Q)eseeed
+
+*
+
+* IF X THEN Y ELSE IF P THEN Q weseee ELSE NIL
+*
+
+c
+
+@818 BD 83C7 ONDI JSR PUSHX SAVE RUNNING POINTER ON
+@81B EE 90 LDXx B,X LIST OF CCNDITIONALS.
+O81D EE 38 LDX a,x GET CONDITION
+OSIF DF 14 STX ARGI
+2821 DE 16 LDX ARG2
+8823 BD 93C7 JSR PUSHX SAVE CURRENT A-LIST.
+@826 DE 14 LDX ARG]
+9828 BD 28B9 JSR EVAL AND EVALUATE
+3823 DF 14 STX ARG]
+a82D 27 15 BEQ NXTCND FALSE! SO NEXT CONDITION.
+@82F aD O3E5 JSR PULLX TRUE!
+g832 DF 16 STX ARG2 RETREVE A-LIST AND RUNNING POIR
+6834 BD @3E5 JSR PULLX
+0837 EE 82 LDX O,X
+2839 EE 2 LDx 2,x% AND GET ASSOCIATED EXPRESSION
+0838 27 16 BEQ RETCND IF THERE IS ANY;
+283D EE 82 LDX a,x
+O83F DF 14 STX ARG! AND EVALUATE.
+- 9841 7E 8839 JMP EVAL THE VALUE OF ‘COND’ IS THAT RESID
+"2844 BD S3E5 NXTCND JSR PULLX
+Q847 DF 16 STX ARG2
+2849 BD 8355 JSR PULLX
+“@84C EE 22 LOX 2X GET NEXT CONDITION
+@84k DF 14 cond STX ARG]
+2259 26 C6 BNE cONDL
+ag52 39 RTS RUNNING OUT. OF LIST;RESULT IS NI
+@853 DE i4 RETCND LDX ARG! NO ASSOCIATED EXPRESSION,
+
+8855 39 RTS SO RETURN VALUE OF CONDITION,
+
+ 
+PAGE 33 LISP M6820 MICRO ASSEMBLER
+
+* *
+* (GET ATOM IND)
+*
+* SEARCH ON ATOMS PROPERTY LIST FOR
+* AN INDICATOR ‘IND’.
+* WHEN FOUND RETURN THE VALUE,
+* ASSOCIATED WITH THIS INDICATOR;
+% OTHERWISE RETURN NIL.
+* NC» Mor Founp
+0856 EE 02 GET LDX 2,x (CDR ATOM) © Fou
+9858 DF 14 STX ARG1
+@85A 26 Ol BNE GET2
+@B5C 39 RTS EMPTY PROPERTY ,RETURN NIL.
+285D EE 2a GET2 LDX a,x GET INDICATOR
+285F 9C 16 CPX ARG2 MATCH?
+6861 27 36 BEQ GETS
+@863 DE 14 LDX ARG! NO,NEXT INDICATOR!
+2865 EE 22 LDX 2,x
+2867 20 ED BRA GET
+@869 DE 14 GETS LDXx ARGI YES,GET VALUE!
+@8@ EE 22 LDX 2,Xx :
+86D EE 9@ LDXx @,X
+OB6F 39 RTS
+*
+* (SASSOC VAR ALIST) q
+*
+* SEARCH FOR A VARABLE ‘VAR’ ON THE .
+* ASSOCIATION LIST 'ALIST’.
+% WHEN FOUND,RETURN THE VARIABLE-VALUE PAIR;
+* OTHERWISE RETURN NIL.
+*
+@870 DE 16 SASSOC LDX ARG2 GET ALIST
+@g72 28 eC BRA ASSOC!
+2874 EE 00 LOOKUP LDX a,x (CAAR ALIST)
+8376 EE ao LDX a,X
+878 9C 14 CPX ARGI MATCH?
+Q87A 27 29 BEQ ONALST
+Zg7c DE 28 LDx SAVEX NO,GET NEXT PAIR!
+O87E EE 22 LDX 24x
+8a2 DF 2g ASSOC! STX SAVEX EMPTY?
+2882 26 FO BNE LOOKUP NO
+9884 39 RTS YES,RETURN NIL
+2885 DE 28 ONALST LDXx SAVEX FOUND,RETURN VARIABLE-
+2887 EE 2@ LDX a,x VALUE PAIR.
+
+2889 39 RTS
+
+ 
+PAGE 34 LISP M6822 MICRO ASSEMBLER
+
+*
+* ILLEGAL FUNCTION NAME.
+
+. *
+“QBBA CE OCFB FN.ER LDX #FN.MS
+
+@88D 7E @BA3 JMP FATAL}
+*
+
+* NO IND. ON FUNCTION NAME PROPERTY.
+*
+
+@89@ DE 14 NO.IND LDX ARG
+@892 EE @2 LDX 2,X
+0894 BD 83C7 JSR PUSHX
+@897 DE 14 LDX ARG!
+2899 EF 2 LDX 8,X
+@89B DF 14 STX ARG!
+ag9D 8D D1 BSR SASSOC LOOKUP THE A-LIST
+Q89F 27 E9 BEQ FNER FOR THIS FUNCTION NAME
+38Al EE 22 LDX 2,x AND TRY AGAIN,
+@8A3 DF 14 STX ARG!
+@8A5 DE 16 LDx ARG2
+@8A7 DF 18 STX ARG3
+8849 BD S355 JSR PULLX
+@BAC DF 16 STX ARG2
+Z8AE BD 276A JSR cons
+9831 DF 14 STX ARGL
+"08B3 DE 18 LDX ARGS
+aaB5 DF 16 STX ARG2
+
+28B7 DE 14 LDX ARG1
+
+ 
+PAGE 35° LISP M6822 MICRO ASSEMBLER
+
+*
+
+* (EVAL FORM ALIST)
+x
+* EVALUATE FCRM
+*
+E
+
+Sik AP BL
+40> @8B9 DF 14 Wty EVAL STX ARG!
+@8BB BD @29D JSR ABORT
+@8BE DE 14 LDX ARG]
+8808 BD S6E4 JSR NUMBER A NUMBER IS ITSELF AS VALUE
+@8C3 27 3 BEQ EVALI
+O8C5 DE 14 LDX ARGI
+@8C7 39 RTS
+@8C8 DE 14 EVAL I LDX ARGL
+@&CA BD B6DC JSR ATOM ATOMIC FORM?
+@8cD 27 12 BEQ SPEC NO,SPECIAL FORM
+@8CF BD 8872 JSR SASSOC YES,ON A-LIST?
+@302 27 @3 BEQ EVAL3
+@8D4 EE @2 LDX 2,X 21 YES,GET ITS ASSOCIATED VAL.
+@8D6 39 EVALEX RIS AND RETURN WITH IT
+3807 CE BEB4 EVAL3 LDX #APVAL NO,LOOKUP ATOMS PROPERTY-LIST
+@8DA DF 16 STK ARG2 FOR AN APVAL-INDICATOR .
+@8DC DE 14 LDOXx ARGI AND RETURN WITH THAT VALUE.
+Aze @8DE 7E 8856 JMP GET Sac
+O8E1 DE 14 SPEC LDX ARGIL .
+38E3 EE 82 LDK 9,X
+Q8E5 BD 86DC JSR ATOM ATOMIC FUNCTION NAME?
+Q8E8 27 2F BEG EVALA NO ”
+@8EA DE 14 LDX ARG!
+@8EC EE a0 LDX @,X
+OSEE BD O6E4 JSR NUMBER YES,IS IT A NUMBER?
+@8Fl 26 97 BNE FN.ER YES,ILLEGAL FUNCTION.
+@8F3 DE 14 LDXx ARGL
+@3F5 EE 20 LDXx Bx
+@8F7 EE 62 EVAL6 LDx 25% NO,GET PROPERTY
+Q8FS DF 28 STX SAVEX
+@8FB 27 93 BEQ NO.IND NIL?
+28FD EE 86 LDX a,x GET INDICATOR
+O8FF 8C ZESC CPX #FEXPR
+a902 2719 BEQ EXFEX FEXPR
+2934 8C BE54 CPX #EXPR
+@9387 27 42 BEQ EXEX EXPR
+8929 8C BE38 CPX #FSUBR
+g9ac 27 62 BEQ EXFSBR FSUSR
+@9ZE BC GE28 CPX #SUBR
+agli! 27 6D BEQ EXSBR SUBR -
+a913 DE 28 LDK SAVEX NO SUCH INDICATOR FOUND YET, °
+@915 EE 22 LDX 2,X GET NEXT IND, FROM PROPERTY!
+9917 23 DE BRA EVAL6 :7
+0919 DE 14 EVAL4 LDX ARG! GO EVALUATE ARG, LIST
+
+@913 28 32 BRA EVALS AND HAND OVER TO APPLY
+
+ 
+PAGE 36 LISP M6820 MICRO ASSEMBLER
+
+“@91D DE 28 EXFEX LDX SAVEX
++ 291F BD B3C7 JSR PUSHX
+- g922 DE 14 LDX ARG1
+“9924 BD 83C7 JSR PUSHX
+0927 DE 16 LDX ARG2 BUILD A LIST OF TWO ELEMENTS
+a929 OF 13 STX ARGS THE FIRST IS THE ARG-LIST.
+g923 DF 14 STX ARGI THE SECOND THE A-LIST.
+@92D DE GE LDXx N
+O92F DF 16 STX ARG2
+@931 BD O76Aa JSR CONS
+0934.DF 16 STX ARG2
+@936 BD O3E5 JSR PULLX
+2939 EE @2 LDXx 2,Xx
+@935B DF 14 STX ARGI
+93D BD @76A JSR CONS
+@942 DF 16 STX ARG2
+e942 BD @3E5 JSR PULLX
+8945 EE 82 LDX 2,Xx
+2947 EE 00 LDX @,X GET FUNCTION; AND GO TO APPLY
+@949 20 21 BRA GO.PLY
+.
+" g94B DE 28 EXEX LDX SAVEX
+@94D EE @2 LDX 2,X
+. O94F EE @o EVALS  LDX a,x
++2951 BD B3C7 JSR PUSHX PUSH FUNCTION
+0954 DE 16 - LDXx ARG2
+@956 BD @3c7 JSR PUSHX PUSH CURRENT A-LIST
++2959 DE 14 LDX ARG!
+@958 EE 22 LDXx 2,X GET ARGUMENT LIST.
+g95D DF 14 STX ARG1 .
+295F BD @aDc JSR EVLIS AND EVALUATE!
+a962 DF 16 STX ARG2
+2964 BD Z3ES JSR PULLX PULL UP A-LIST
+a967 DF 1g STX ARG3
+g969 BD 2365 JSR PULLX PULL UP FUNCTION
+aoéc DF 14 GO.PLY STX ARGL AND GO INTO APPLY
+
+296E 28 5A BRA APPLY
+
+ 
+PAGE 37 LISP M6830 MICRO ASSEMBLER
+
+e978 DE 28 EXFSBR LDX SAVEX ‘
+@972 EE a2 LDX 2,Xx GET MACHINE ENTRY ADDRESS, 2
+2974 EE 2d LDX a,x
+
+2976 BD 93C7 JSR PUSHX PUSH FOR TRICKY JUMP
+
+@979 DE 14 LDX ARG GET ARGUMENTL FOR FUNTION
+
+9973 EE 22 LDX 2,X
+
+a9 7D DF 14 STX ARG1 ARG2 = A-LIST
+
+a9 7F 39 RTS GOTO MACHINE ROUTINE
+
+2980 DE 28 EXSBR _LDX SAVEX
+
+@982 EE 2 LDXx 2,x GET MACHINE ENTRY ADDRESS,
+
+a984 EE BO LDXx a,x
+
+e986 BD @3C07 JSR PUSHX AND PUSN FOR TRICKY JUMP
+
+a989 DE 14 LDXx ARG
+
+@98B EE 22 LDXx 2,Xx
+
+298D DF 14 STX ARG1
+
+@98F 3D ZADC JSR EVLIS EVALUATE ARGUMENT.
+
+2992 DF 12 ARGLST STX CURCEL SAVE RESULT
+
+994 86 26 LDAA #6
+
+0996 CE 2014 LDXx #ARG1
+
+e999 DF 28 STX SAVEX .
+a99B 6F GB CLRARG CLR @,X ‘NIL ' ALL ARGUMENTS
+
+e99b 28 INX
+
+Z99E 4A DECA .
+299F 26 FA, BNE CLRARG .
+a9Al DE le GETARG LEX CURCEL
+
+39A3 27 22 BEQ GSUBR END OF ARG, LIST
+
+BIAS AG 2B LDAA a,x GET ARG, FROM THIS LIST. .
+GSAT ES 81 LDAS 1,X
+
+Q9A9 EE @2 LDX 2,X
+
+Z9AB DF 12 STX CURCEL
+
+@9AD DE 28 LDx SAVEX
+
+29AF 8C 221A CPX #ARG3+2
+
+O9B2 27 GA BEQ TMA SER
+
+3934 AT 22 STAA a,x
+
+2986 E7 al STAB 1,X
+
+2938 38 INK
+
+g9B9 a8 INX
+
+ZOBA DF 28 STX SAVEX
+
+as3c 22 £3 BRA GETARG
+
+@9BE CE @CEA TMA.ER LDX #TMA.MS TOO MANY ARGUMENTS!
+
+a9cl BD @3A5 JSR PMESSG
+
+29C4 BD 0339 ~dSRO—- ORE IME 0/58
+
+Z9C7 DE 14 GSUBR _LDX ARG1 XZARGI ON ENTRY
+
+29cs 39 EX RTS AND GOTO MACHINE SUBR.
+
+ 
+PAGE 38 LISP M68@0 MICRO ASSEMBLER
+
+x
+. * CAPPLY FN ARGS ALIST)
+. *
+™ * APPLY THE ARGUMENT TO ‘FN
+*
+Q9CA 27 FD APPLY BEQ EX NIL AS FUNCTION RETURNS NIL!
+ascc BD @6pc JSR ATOM ATOMIC FUNCT ION-NAME?
+@9CF 27 59 BEQ APPLYI NO
+@9D1 DE 14 LDX ARGI
+@9D3 BD @6E4 JSR NUMBER YES,IS IT A NUMBER?
+B9D6 26 37 BNE FN.ER. YES,ILLEGAL FUNCTION,
+2908 DE 14 LDX ARGL NO,GET ITS PROPERTY.
+f9DA EE G2 APPLY3 LDX 2,Xx
+esdc 27 14 BEQ APPLYZ ILLEGAL FUNCTION NAME
+QODE DF 28 STX SAVEX
+@9E@ EE 20 LDX BX GET INDICATOR!
+@9E2 gC BE29 CPX #SUBR
+@9E5 27 2B BEQ EXSBRI SUBR,
+29E7 8C BES4 CPX #EXPR
+@9EA 27 34 BEQ EXEX1 EXPR.
+, @9EC DE 28 LDX SAVEX
+Q9EE EE 82 LDX 2,X NONE OF THESE,GET NEXT IND.
+O9FO 28 Eg BRA APPLYS
+. 9F2 DE 16 APPLY2 LDX ARG2 NOW TRY TO FIND
+»@9F4 BD 8307, JSR PUSHX FUNCTION-NAME ON A-LIST
+g9F7 DE 18 LDX ARGS
+agro DF 16 STX ARG2
+*B9FB DE 14 LDX ARGL
+@SFD BD 2872 JSR SASSCOC
+BABB 27 OD BEQ FN.ER, NOT THERE,SO ERROR
+BAb2 EE a2 LDX 2,X FOUND!,GET ASSOCIATED NAME
+BAG4 DF 14 STX ARGI
+@AZ6 BD 2305 JSR PULLX AND TRY AGAIN
+ZAaS9 DF 16 STX ARG2
+QAZB DE 14 LDXx ARG]
+GAGD 22 BB BRA APPLY
+@AZF TE @86A FN.ER. JMP FN.ER
+@Al2 DE 28 EXSBRI LOX SAVEX
+@A14 EE 82 . LDX 2,X GET MACHINE ENTRY-ADDRESS
+@A16 EE 89 LOX 2,x
+GAI8 BD @3C7 JSR PUSHX AND PUSH FOR TRICKY JUMP!
+@A1B DE 16 LDX ARG2 GET ARGUMENT LIST
+@AID TE 9992 JMP ARGLST AND GO EVALUATE FIRST
+@A28 DE 28 EXEX1 LDX SAVEX EXPR INDICATOR
+, @A22 EE 32 LEX 2,X GET FUNCTION LIST
+@A24 EE 20 LDX ByX
+. GAZE DF 14 STX ARG!
+
+. GA28 23 AG BRA APPLY AND GO INTO APPLY AGAIN
+
+ 
+PAGE 39 LISP M6823 MICRO ASSEMBLER
+
+@A2A DE 14 APPLY! LDX ARG! ‘
+BA2C EE G2 LDX BX FUNCTION IS A LIST. -
+GAZE 8C BDES CPX #LAMBDA
+BASi 27 3C BEQ EVLAMB LAMBDA FORM!
+@A33 8C BESS CPX #FUNARG
+®A36 27 22 BEQ EVLFNA FUNARG FORM!
+9A38 DE 16 LDX ARG2
+@BA3A BD 2307 JSR PUSHX NONE OF THESE;
+@ASD DE 18 LDXx ARGS SO EVALUATE FUNCTION LIST FIRST
+@A3F DF 16 STX ARG2
+@Aa41 BD @3C7 JSR PUSHX
+@a44 DE 14 LDx ARGi
+BA4€6 BD 68B9 JSR EVAL
+ZA4S DF 14 STX ARGL
+@A4B BD 03 JSR PULLX
+QA4E DF 18 STX ARGS
+GA5@ BD 3355 JSR PULLX
+@A53 DF 16 STX ARG2
+@A55 DE 14 ‘ LDx ARG] AND THEN GO INTO APPLY AGAIN
+@AS7 TE SSCA JMP APPLY
+'
+@A58 DE 14 EVLFNA LDX ARGI
+BA5C EE 92 LDA 24% GET OLD A-LIST -
+@ASE EE 92 LDX 2,X ’
+BA62 EE @2 LDXx @,Xx
+QA62 DF 18 STX ARGS
+@AG64 DE 14 LDX ARGI :
+@A66 EE 02 LDX 2,X GET FUNCTION
+2A68 EE 20 LDX 8,X
+@AGA DF 14 STX ARG1
+
+BA6C TE Z9CA JMP APPLY AND GO INTO APPLY
+
+ 
+ 
+
+ 
+
+PAGE 48 LISP
+Ath
+
+—
+
+2A6F
+a7)
+Za74a
+
+" BA76
+
+@a 78
+BATA
+ATC
+BATE
+GA81
+BA83
+2A85
+@A87
+BA89
+BABB
+zasD
+BAB
+cA92
+BAS4
+ASE
+@A9S
+2A 9B
+
+" gagd
+
+2A9F
+eAAl
+BAAA
+BAAG
+ZAAS
+GAAA
+AAC
+BAAE
+QABQ
+BABS
+BABS
+GAB?
+ABS
+ABB
+
+ABE
+ACI
+BAC2
+@ACS
+BAC5
+BACB
+@ACB
+@ACE
+@ADI
+2ADA
+
+- ADS
+
+ 
+
+@AD9
+
+DE
+BD
+EE
+EE
+DF
+DE
+27
+BD
+EE
+DF
+DE
+27
+EE
+DF
+BD
+OF
+DE
+DF
+BD
+DF
+DE
+
+EE
+
+OF
+BD
+
+EE
+
+26
+DE
+
+26
+DE
+
+DF
+BD
+
+EE
+
+EE
+
+EE
+
+DF
+
+TE
+
+cE
+31
+
+3l
+
+22
+CE
+BD
+cE
+BD
+BD
+DF
+8D
+
+TE
+
+14
+O3C7
+22
+@2
+238
+16
+2A
+B3C7
+a8
+16
+28
+35
+2a
+14
+Q76A
+14
+16
+16
+ZT6A
+18
+28
+a2
+28
+@3E5
+22
+DS
+28
+19
+18
+16
+B3E5
+ge
+a2
+aa
+14
+28B9
+
+@CEA
+
+@3
+
+@d46
+Q3A5
+@D56
+Q3AF
+@3E5
+14
+
+8607
+B19c
+
+CIS
+
+co EXTAMB
+
+PAIRLS
+
+VAREXH
+
+ar)
+
+TA ER
+
+cfr TLA.ER
+RECOVI
+
+M6820 MICRO ASSEMBLER
+
+LOX
+JSR
+LDx
+LDX
+STX
+LDX
+BEQ
+JSR
+LDx
+STIX
+LDXx
+BEQ
+LDx
+STX
+JSR
+STX
+LDX
+STX
+JSR
+STX
+LOX
+LDX
+STX
+JSR
+LOX
+BNE
+LDx
+BNE
+LDX
+STX
+JSR
+LDX
+LDx
+LDXx
+STX
+JMP
+
+LDx
+INS
+Ins
+BRA
+LDX
+JSR
+LDX
+JSR
+JSR
+STX
+JSR
+JMP
+
+ey
+ig
+
+iss
+
+ARG!
+PUSHX POINTER TO LAMBDA-FORM
+25x
+
+8X
+
+SAVEX POINTER TO LAMBDA-VARIABLES.
+ARG2 = ACTUAL PARAMETERS.
+
+VAREXH
+
+PUSHX NOW ASSOCIATE LAMBDA~VAR,
+8,X WITH ACTUALS.
+
+ARG2
+
+SAVEX
+
+TA.ER
+
+a,x
+
+ARG1 EXTEND A~LIST WITH A
+
+CONS VARIABLE-VALUE PAIR.
+ARG
+
+ARGS
+
+ARG2
+
+CONS
+
+ARGS UPDATE A-LIST POINTER.
+SAVEX
+
+2,X NEXT LAMBDA VARIABLE
+SAVEX
+PULLX
+2,X NEXT ACTUAL PARAMETER,
+PAIRLS
+
+SAVEX BOTH LISTS EXHAUSTED?
+TLA.ER NO,TOO LITTLE ARGS.
+
+ARGS
+
+ARG2 GET UPDATED A-LIST
+
+PULLX GET FUNCTION TO BE EVALUATED
+2,X (2ND FORM ON LAMBDA LIST)
+2,X
+
+a,X
+
+ARG AND LET EVAL BO THE WORK
+EVAL
+
+#TMA WMS
+
+RECOV!
+
+#TLA MS
+
+PMESSG
+
+#FOR MS
+
+PMESGI]
+
+PULLX
+
+ARGL
+
+PRINTE PRINT FUNCTION CALL
+LISP
+PAGE 41 LISP M6828 MICRO ASSEMBLER
+
+* .
+* (EVLIS LIST ALIST) a
+*
+* EVALUATE ALL ELEMENTS OF ‘LIST'
+* THE VALUE IS A LIST OF RESULTS
+* OF ALL THESE EVALUATIONS.
+4
+@aDC DE 14 EVLIS  LDX ARG]
+CADE 27 32 BEQ EVLISX EMPTY SOURCE-LIST RETURNS NIL.
+QAEZ BD @3C7 JSR PUSHX
+OAE3 EE 22 LDX @,x GET A FORM FROM SOURCE-LIST
+@AES DF 14 STX ARG!
+2AE7 DE 16 LDX ARG2
+@AES BD O3C7 JSR PUSHX
+@AEC DE 14 LDX ARG]
+@AEE BD 2859 JSR EVAL AND EVALUATE THAT FORM
+QAF1 DF 18 STK ARGS
+ZAF3 BD O3E5 JSR PULLX
+2AF6 DF 16 STX ARG2
+QAFS8 BD 9355 JSR PULLX
+ZARB EE 02 LDX 2,X GET CDR OF SOURCE-LIST .
+QAFD DF 14 STX ARG1
+QAFF DE 18 LDX ARGS
+@821 BD 33c7 JSR PUSHX :
+@B24 DE 14 LDX ARG! .
+2B@6 BD D4 BSR EVLIS AND GO INTO EVLIS AGAIN!
+2328 DF 16 STX ARG2
+@BZA BD O3E5 JSR PULLX .
+@BOD DF 14 STX ARG]
+@BaF BD 276A JSR CONS CONS THE RESULT TO
+
+@B12 39 EVLISX RTS A RESULT-LIST.
+
+ 
+PAGE 42 LISP M68@@ MICRO ASSEMBLER
+
+*
+%* (PROG CVARL VAR2 see.) LABEL (STATEMENT) .esesee)
+
+*
+@813 DE 1A PROG LDXx PROGB
+@B15 BD 83C7 JSR PUSHX
+@B18 DE 1c LDXx RUNP
+@B1A BD B3c7 JSR PUSHX
+@BiD DE 14 LDX ARGI
+@BlF 27 56 BEQ RETNIL
+@B2!1 EE @2 LDX 2,X
+@B23 27 52 BEQ RETNIL NO PROG-LIST
+9825 DF 1A STXK PROGB
+@B27 DE 16 LDx ARG2
+@B29 DF 18 STX ARGS SAVE A-LIST
+@B2B DE 14 LDx ARGI
+@B2D EE 86 LDX B,X GET LIST OF PROG VARIABLES,
+@32F 27 22 BEQ PROGL
+@B31 BD @3C7 LOCVAR JSR PUSHX
+@334 EE a2 LDX 8,X APPEND PROG VARIABLES
+@B36 DF 14 STX ARG! TO THE CURRENT A-LIST
+@B38 DE BE LDX N THE ASSOCIATED VALUE
+@BSA DF 16 STX ARG2
+@B3C BD @76A JSR CONS IS INITIALLY NIL.
+OBSF DF 14 STX ARGL
+©@B41 DE Ig LOX ARG3
+@B43 DF 16 STX ARG2
+@B45 BD B76A JSR CONS
+"@B48 DF 18 STX ARG3 UPDATE A-LIST POINTER
+@B4A 3D O@3E5 JSR PULLX
+@B 4D EE a2 LDXx 2X
+@B4aF 26 EB BNE LOCVAR NEXT VARIABLE
+B51 DE 18 PROG1 LDX ARGS
+@B53 DF 16 STX ARG2 UPDATED A-LIST
+@855 DE 1A LDX PROGB BEGIN OF PROG.
+@B57 DF 1C EXPROG STX RUNP
+@B59 EE 22 LDXx ,X GET STATEMENT FROM PROG-LIST
+@B5B DF 14 STX ARGI
+@85D BD aé6fc JSR ATOM ATOMIC?
+G86 26 OF BNE NXTST YES,LABEL;SO SKIP.
+@B62 DE 16 LDX ARG2
+@364 BD @3C7 JSR PUSHX
+@B67 DE 14 LDX ARGI
+@369 BD Oga9 dSR EVAL NO,EVALUATE STATEMENT
+@BéC BD @3E5 RETPRG JSR PULLX
+@B6F DF 16 STX ARG2
+, @B71 DE 1C NXTST LDX RUNP
+@373 EE @2 LDx 2 4X NEXT STATEMENT
+- B75 26 EO BNE EXPROG
+. 277 BD 2315 RETNIL JSR PULLX RUNNING OUT OF PROGRAM!
+SB7A DF Ic STX - RUNP
+*@B7C BD O3E5 JSR PULLX
+»@B7F DF 1A STX PROGB
+@Bg! DE OE Lox N RETURN WITH VALUE NIL
+
+@B&3 39 RTS
+
+ 
+PAGE 43 LISP M6822 MICRO ASSEMBLER
+
+* :
+* (GO X) .
+*
+* GO TO LABEL X (LITERAL)
+*
+@BB4 DE 14 Go LDx ARG!
+9B86 27 18 BEQ GO.ER
+@B88 EE 62 LDX 8,x
+@BBA DF 14 STX ARGI
+gB8C DE IA LDX PROGB IN A PROG.?
+OBBE 27 12 BEQ GO.ER NO,ERROR
+@B99 DF 16 FNDLBL STX ARG2 SEARCH FOR A LABEL
+@392 EE ad LDx a,x
+@B94 9C 14 CPX ARG MATCH?
+@B96 27 16 BEQ LABEL YES
+2398 DE 16 LDXx ARG2
+@B9A EE @2 LDx 2,X NO,NEXT ELEMENT ON PROG-LIST
+@B9C DF 16 STX ARG2
+OBOE 26 FO BNE FNDLBL
+2BAG CE @bd2l GO.ER  LDX #G0.MS
+@BA3 BD 33A5 FATALL JSR PMESSG .
+@BA6 DE 14 LDX ARG1
+2BAR BD 2607 JSR PRINTE
+@BAB 7E @1SC UMP LISP .
+ZBAE 96 16 LABEL  LDAA ARG2 LABEL FOUND,
+@BBO D6 17 LDAS ARG2+1 MODIFY RUNNING POINTER \
+2332 97 ic STAA RUNP
+@3B4 D7 ID STAB RUNP+1
+2B3S 39 RTS
+ey
+* (RETURN X)
+*
+* RETURN FROM PROG WITH X AS VALUE
+*
+@BB7 DE 1A RETURN LDX PROGB IN A PROG.?
+8339 27 16 BEQ RETVAL NO,JUST RETURN VALUE
+2238 30 CLRSTK TSX
+@BBC 31 INS YES,CLEAN UP STACK
+238D 3h LNS USED BY PROG, muy
+QBBE EE 33 LDx @,x Ce med
+@BCa 8c Ba6C CPX #RETPRG ~~
+2BC3 26 F6 BNE CLRSTK
+g3c5 31 ras were 4
+@BCS 31 INS ebro:
+gBC7 BD @3E5 JSR PULLX :
+aBCA DF Ic STX RUNP .
+@BCC Bb 235 JSR PULLX .
+2BCF BF 1A STX PROGB :
+gBD1 DE 14 RETVAL LDX ARG! RETURN EVALUATED ARG OF RETURN >
+
+@BD3 39 RTS
+
+ 
+PAGE 44 LISP M6880 MICRO ASSEMBLER
+
+. *
+
+. * GET TWO NUMERIC VALUES
+
+. * ON EXIT A&3 CONTAINS THE NUMERIC VALUE OF ARG! DE
+* AND X POINT TO THE NUMERIC VALUE OF ARG2. ye
+
+* En se
+@BD4 EE 09 GET2N LDX a,x anne
+@BDS 29 DEX
+gBD7 26 18 BNE WN.ER ARG NOT A NUMBER ge. mn
+2BD9 DE 16 LDX ARG L
+@BDB EE 2a LDXx a,x fee uM
+2BDD a9 EX
+@BDE 26 @D BNE SN.ER2 ARG2 NOT ANUMBER
+OBES DE 14 LDX ARG!
+@BE2 EE 92 LDX 2,X
+2BE4 AG 2B LDAA 8X GET NUMERIC VALUE OF ARGI
+@BE6 E6 21 LDAB «IX
+BES DE 16 LDX ARG2
+BEA EE 22 LDX 2,X POINT TO NUMERIC VALUE OF arc2
+@BEC 39 RTS
+@BED DE 6 NN.ER2 LDX ARG2
+@BEF DF 14 STX ARG!
+@BFl CE 2D2D  NN.ER  LDX #0 MS
+2BF4 7E @BA3 ump FATAL
+*
+: * (PLUS XY)
+*
+& RESULT IS THE SUM OF X AND Y
+. *
+@BF7 BD OBDA PLUS JSR GET2N
+BFA EB 21 ADDB 1, X 16-BIT ADD
+BFC AS 2a ADCA 9s X
+BFE 29 B BYS OV.ER OVERFLOW
+2008 7E @CAB -STRES_)—UMP PUTIN STORE RESULT
+
+*
+
+* <C(MINUS K Y)
+
+*
+* RESULT IS X - ¥
+*
+M
+
+@C@3 8D CF InuS BSR GET2N
+@C25 ES ai SUBB 1,X
+@C@7 A2 BB SBCA ByXx 16-BIT SUBSTRACT
+@C@9 28 FS BVC STRES
+@C9B CE @D3E OV.ER LDX #0V.MS
+QCBE 36 PSHA
+OCaF 37 PSHB
+C12 BD O3A5 JSR PMESSG
+C13 33 PULB
+. C14 32 PULA
+
+, @C15 TE SCAB JMP PUTIN
+
+ 
+PAGE 45° LISP M6822 MICRO ASSEMBLER . G —
+59 ‘
+* GET TWO NUMERIC VALUES oS :
+* AND MAKE ABSOLUTE. o
+* NUMIZABS(ARG1) 96
+* NUM2=ABS(ARG2) fe
+*
+#018 8D BA G2ABS BSR GETEN
+QCA 36 PSHA
+@C1B Ag 8a EORA a,x
+@C1D 97 3! STAA SIGN SAVE RESULT SIGN
+QCIF 32 PULA
+@C20 8D oF BSR ABS
+2022 97 24 STAA NUMI
+@c24 D? 25 STAB NUMI+1
+@C26 A6 BO LDAA a,x
+ac2g ES a1 LDAB 1,x
+QC2A 8D 25 BSR ABS
+acec 97 26 STAA RUM
+@c2E D7 27 STAB NUM2+1
+2033 39 RTS
+ac3t aD ABS TSTA ‘
+9C32 2a OS BPL ABS
+8034 43 DE NEG coma ABSOLUTE VAL OF A &B
+2035 52 NEGB .
+@036 26 Ot BNE ABs :
+238 4C INCA
+2039 39 ABSL = RTS .
+*
+* (TIMES X YD
+* « .
+* RESULT 1S THE PRODUCT OF x ANDY fn HE
+*
+@C3A 8D De TIMES BSR G2ABS
+@c3c CE 3011 LDX #17 STEP COUNT
+QC3F 4F CLRA
+2C40 SF CLRB
+9041 29 28 BRA MUL3
+BC43 24 24 MUL I BCC,  MUL2
+ac45 DB 25 ADDBYy NUM I+1 ©,
+2C47 99 24 aDda’’ Numi: Be
+BC49 46 MUL2  RORA
+QC4A 56 RORB
+2C4B 76 826 MUL3S ROR yume,
+aC4E 76 8227 ROR nume+1 J H+
+acst a9 DEX
+gc52 26 EF BNE MULL .
+2c54 4D TSTA
+2055 26 B4 BNE OV .ER :
+gC57 5D TST oy
+@C58 26 BI BNE OV.ER TEST FOR OVERFLOW
+QC5A 96 26 LDAA yume ,
+aC5C 2B AD BMI OVER .
+QC5E DE 27 LDAB NUM2 +1
+
+aC6S 23 43 BRA RSTRS
+
+ 
+PAGE 46 LISP M6802 MICRO ASSEMBLER
+
+*
+: * (QUOTIENT X Y)
+*
+* RESULT IS X/¥
+.
+2cs62 8D B4 DIV BSR G2ABS
+acé4 DE 26 LDX num2
+OC66 27 AS BEQ OV.ER DIVISION BY ZERO!
+@C68 7F 2233 CLR STEPC
+3CB WC 830 INC STEPC
+@Cé6E 7C 0@38 DIVSCL INC STEPC
+ac 71 58 ASLB PRESCALE NUM?
+ac72 49 ROLA
+ac73 2a F9 BPL DIVSCL
+QO 97 26 STAA NUM
+ac77 D7 27 STAB -NUM241 Ee
+2079 96 24 LDAA NUM 1 Nike 2
+act Dé 25 LDA NUM L+1
+aC7D 7F 2224 CLR uM ALE aa fo
+2ce@ TF co2s CLR NUMI+1 hg aden
+GC83 DB 27 DIVI  SUBB - NUM2+1 gee
+AC85 92 26 SBCA ——-NUM2 Ne cyenne !
+ace? 24 a6 Bcc DIV2
+gcg9 DB 27 ADDB = NUM2 +1
++ @C8B 99 26 ADCA NUM
+_ BC8D 2C cLe
+2C8E 9C FCB $9¢ SKIP
+' BC8F 2D DIV2 SEC
+acoa 79 2025 ROL NUMI+1 SHIFT INTC RESULT
+C93 79 3024 ROL NUM
+@C96 74 8026 LSR num
+@C99 76 2027 ROR NUM2-+1
+2C9C 7A 2032 DEC STEPC
+2C9F 26 EZ BNE BIVI
+gcal 96 24 LDAA NUM
+ZCA3 D6 25 LDAB os NUMI+1
+@CA5 7D G31  RSTRS TST SIGN RESTORE SIGN
+2CA8 BD @C32 JSR ABS+!
+
+ 
+PAGE 47 LISP 46838 MICRO ASSEMBLER
+
+* ’
+* CREATE A NUMERIC ATOM WHOSE VALUE :
+
+* IS IN ACCUMULATOR 4 @B-(A 1S MSB) ot wee
+*
+
+2@CAB 97 24 PUTIN STAA QUMI CREATE A NUMERIC ATOM
+
+@CAD DT 25 STAB NUMI+1 FOR THE RESULT OF AN
+
+@CAF DE OE LDX N
+
+@cB! DF 14 STX ARG]
+
+@c383 DF 1¢é STX ARG2
+
+@CB5 BD G@76A JSR cONS
+
+@cBS DF 16 STX ARG2
+
+BCBA BD @76A JSR CONS
+
+2CBD DF 14 STX ARGI
+
+OCBF 6C 21 Inc 1,X
+
+@CCl DE 16 LDX ARG2
+
+@CC3 96 24 LDAA num
+
+2CC5 DS 25 LDAB NUMI+4
+
+@CC7 AT 23 STAA a,x
+
+@CCS E7 a1 STAB 1,X
+
+@ccB DE 14 LD ARG]
+
+accD 39 RTS *
+Abe DE
+
+ 
+PAGE 48 LISP M6882 MICRO ASSEMBLER
+
+« GCCE 53 SN.MS Fes “SYNTAX ERROR/
+
+. @CDA 4E Na .MS FCs “NON ATOMIC ARG: /
+
+“ @CEA 54 TMA.MS FCS /TOO MANY ARGS /-—y-———
+@CF8 49 FN.MS FCS JILL. FUNCTION: /
+@D@7 41 AA MS FCS “ATOMIC ARG: /
+
+OD13 49 IN.MS FCs 7ILLEGAL NUMBER/
+
+bd21 49 Go.MsS FCs ILLEGAL GO: /
+
+ab2D 4E NN MS FCs /NON NUMERIC ARG: /
+
+@D3E 4F OV ..MS FCs /OVERFLOW/
+
+@D46 54 TLA.MS FCS /T00 LITTLE ARGS /e@——
+@D56 46 FOR.MS FCS /FOR? / a.
+@D5B 4D FL.MS Fes /MEMORY FULL /
+
+aD6s 53 SO.MS FCS “STACK OVERFLOW/
+
+@D74 49 ID.MS FCS /ILLEGAL DEVICE/
+
+gD82 22 HED FCS ¢/ LISP 1.5 V3A/
+
+ 
+PAGE 49 LISP M8880 MICRO ASSEMBLDR
+
+6
+
+ 
+
+ 
+
+x ‘
+* THE OBJECT LIST (OBLIST)
+*
+aD94 Loc EQu #43
+aD94 ORG LOC/4*4 EVEN WORD ADDRESSING
+@D94 4E NAMNIL FCC /NIS PRINT-NAME OF ATOM "NIL"
+@D96 GD FDB #42
+BD98 4C FCB "L, $82
+aD9A 2B FDB NIL
+@D9C GE PRPNIL FDB APVAL +4 PROPERTY OF ATOM ‘NIL’
+QDAZ 0 FDB NIL, +4
+QDAA BE FDB FSUBR,x+4
+2DA8 06 FDB FALSE, NIL Misc
+2DAC 3D OBLIST FDB R+LOtM #44 Pye - poe
+@0B9 QE FOB APVAL,*+4 — - Gry Ty
+aDB4 2D FDB OBL, NIL a
+ODB8 4F FCC /0B/
+@DBA 2D FDB +2
+@DBc 4c FCC AW .
+aDBE @D FDB +2
+adea 53 Foc /ST/ sie
+aDce ae FDB NIL YN cia ee .
+a0C4 20 OBL 1 FDB NIL, #+4 Sorel Bae .
+epee ad FDB *+4,0BL2 wn ao.
+adcc @D T FDB T .PNAM+M «+4 ry .
+ODDS IE FDB APVAL ,*+4 _
+aDd4 @D FDB T,*+4
+@DD8 2E FDB SUBR,*+4
+@Ddc 29 FDB EX, NIL
+QDE@ 54 T.PNAM FCB ‘T,F
+@DE2 ea FbB NIL
+@DE4 OBL2 EQU *
+2DE4 2D FDB *+4,0BL3 ~~
+ODES @D LAMBDA FDB AT1Z+M, REA
+@DEC @E FDB APVAL,*+4
+@DF2 2D FOB *-8,NIL
+@DF4 4c Foc AASY
+@DF6 2D FDS eto
+@DFs 4D FCC /MB/ v.
+QDFA @D FDB +2
+ODFC 44 Fcc /DA/ “
+QDFE 22 FDB WIL X
+ZE2O OBL3 EQuU x
+2E20 GE FDB *+4,0BL4 a
+QES4 gE APVAL — FDB #FLOtM, RRA
+GEIS OE FDB APVAL ,*+4 ,
+QE2C OE FDB *-8, NIL ..
+QE12 41 Fcc 7AP/
+2El2 GE FDS *+2
+BEL4 56 Fec NAS .
+QE16 BE FDB #+2 :
+@ELB 4c FcB ‘LF
+
+DELIA 2e FDB NIL ’
+
+ 
+PAGE 58 LISP
+
+ BEIC
+
+ 
+
+OE20
+
+” OE24
+
+@E28
+BE2C
+QEZE
+GE38
+BES2
+
+BES 4
+BES8
+BESC
+gE4e
+@EA4
+BEAG
+QE4S
+QE4A
+BEAC
+GE4E
+
+GE52
+@E54
+BES8
+BE5C
+
+. GE62
+
+@E62
+BE64
+BE6S
+
+SE6S
+dESC
+QE79
+BET4
+QE 78
+ETA
+BET
+SETE
+9ESa
+BE8e
+
+2E84
+SESS
+@E8c
+GES
+
+*@E94
+
+@ES6
+BESS
+
+*GESA
+
+ZESC
+
+. BESE
+
+” BEAG
+
+BEA4
+
+@E1c OBL 4
+GE
+
+GE SUBR
+BE
+
+BE
+
+33
+
+BE
+
+42
+
+aa
+
+@E34 OBLS
+QE
+
+BE FSUBR
+OE
+
+GE
+
+46
+
+BE
+
+55
+
+BE
+
+52
+
+ae
+
+QE5B OBL ¢
+BE
+
+OE EXPR
+GE
+
+2E
+
+45
+
+OE
+
+ag
+
+2@
+
+BESS OBL7
+OE
+
+OE FEXPR
+BE
+
+BE
+
+46
+
+GE
+
+58
+
+GE
+
+52
+
+BES4 OBL8
+GE
+
+GE FUNARG
+GE
+
+GE
+
+46
+
+gE
+
+4E
+
+OE
+
+52
+
+oa
+
+DEAS OBLSS
+
+ar
+gE
+
+M68@6 MICRO ASSEMBLER
+
+EQU
+FDB
+FDB
+FDB
+FDS
+Fcc
+FDB
+Fcc
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+Fcc
+FDB
+Fcc
+FDB
+FcB
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+EQU
+FDB
+FDB
+FbDB
+FDB
+Fcc
+FDB
+Fcc
+FDB
+FCB
+FDB
+EQUu
+FD3
+FDB
+FDB
+FDB
+Fcc
+FDB
+Fcc
+FDB
+FCC
+FDB
+EQU
+
+FDB
+FDS
+
+*
+*+4,0BL5
+R+LZ+M +4
+APVAL,*+4
+*<8,NIL
+/SU/
+
+*+2
+
+/BR/
+
+NIL
+
+*
+*+4,0BL6
++L 24M, +4
+APVAL ,*+4
+*=~B, NIL
+/FS/
+
+*+E
+
+/UB/
+
++2
+
+"RF
+
+NIL
+
+*
+
+*+4,0BL 7
+A+I2ZEM,*+4
+APVAL ,*+4
+#8, NIL
+SEX/
+
+¥+2
+
+/PR/
+
+NIL
+
+*
+*+4,0BL8
+*+ 12M RTA
+APVAL ,*+4
+*-8,NIL
+SFE/
+
+#42
+
+XPS
+
+*+2
+
+‘R,F
+
+NIL
+
+*
+
+*+4,0BL 98
+H+L 24 +4
+APVAL ,*+4
+*-8, NIL
+JFU/
+
++2
+
+fNAS
+
+KD
+
+ARGS
+
+NIL
+
+*
+
+*+4,0BL9 “y
+
+ALAM KAA
+PAGE 51
+
+DEAS
+BEAC
+BEBO
+@EB2
+GEBA4
+GEBE
+
+GEBS
+@EBC
+OECD
+@EC4
+BECS8
+ECA
+ECC
+ECE
+
+ZEDGE
+@ED4
+GEDS
+@EDC
+SEES
+GEEZ
+GEE4
+QEES
+
+DEES
+@EEC
+SEF
+2EF4
+GEFS
+EFA
+BEFC
+BEFE
+
+SF a9
+224
+QF ag
+@F ac
+OF12
+2F12
+aFt4
+OFIE
+
+BF18
+OFIC
+aF2@
+OFZ 4
+OF28
+QF2A
+
+QF2C
+BF33
+OF34
+OF38
+GF3C
+
+ZE
+86
+41
+@E
+4F
+aa
+GEBS
+@E
+GE
+BE
+a7
+43
+GE
+52
+2a
+GELS
+QE
+GE
+@E
+a7
+43
+GE
+52
+30
+SEES
+GE
+aE
+OE
+a7
+43
+aE
+4E
+20
+OF 28
+OF
+OF
+aE
+26
+4E
+OF
+4c
+oo
+2F18
+2F
+OF
+QE
+@7
+45
+ae
+@Fec
+
+OF
+gE
+@6
+4E
+
+LISP
+
+OBL9
+
+OBL12
+
+OBL11
+
+OBLI2
+
+OBL13
+
+OBL 14
+
+M6822 MICRO ASSEMBLER
+
+FDB
+FDB
+Fcc
+FDB
+FCC
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCB
+FDB
+EQU
+FDB
+FDB
+FDB
+FD3
+FCC
+FDB
+FCB
+FDB
+EQu
+Foa
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+Fcc
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+EQu
+FDS
+FDB
+FDB
+FDB
+FCC
+
+SUBR,*+4 Vv
+ATOM, NIL “
+“ATS
++2 7
+
+70M /
+NIL Xx
+
+*
+*+4,08L18
+AA LZ+M HA
+SUBR,*+4
+CAR, NIL
+SCAS
+
+*+2
+
+"RyF
+
+NIL
+
+*
+*+4,0BL11
+*+1 24M, *+4
+SUBR ,*+4
+COR, NIL
+/CD/
+
+*+2
+
+"RF
+
+NIL
+
+*
+*+4,0BL12
+A+124M, +4
+SUBR ,*+4
+CONS, NIL
+/CO/
+
+*+2
+
+/NS/
+
+NIL
+
+*
+
+*+4,0BL13
+REL ZEM, +4
+SUBR ,*+4
+NULL, NIL
+JNU
+
+*+2
+
+AL
+
+NIL
+
+*
+*+4,0BL14
+R+ELZHM, R+4
+SUBR , *+4
+Eg, NIL
+SEQS
+
+NIL
+
+*
+
++4, OBL IES
+*+1 24M, *+4
+SUBR +4
+NUMBER, NIL
+fNUS
+
+ 
+PAGE 52 LISP
+
+ 
+
+OF3E
+* OF 4G
++, OF 42
+OF 4a
+2F46
+
+GF 48
+@F4C
+@F59
+GF54
+OF58
+GFOA
+BF5C
+@F5E
+OF 62
+OF 62
+aré4
+2F66
+
+aF 6S
+@Fsc
+OF 7a
+OF 74
+, GF 78
+QF7A
+» SF7C
+
+QF TE
+
+aFg2
+OF R4
+OF 88
+OF BC
+QF92
+@F92
+aF94
+aF96
+OF98
+OF9A
+
+2F9C
+CFAD
+@FA4
+FAS
+@FAC
+@FAE
+‘OFB2
+OFB2
+. BFB4
+. GFBE
+
+. BFB8
+, OFBC
+| OFC
+
+aFca
+. OFC
+
+ 
+
+OF
+4D
+
+aF
+
+45
+
+ry
+
+aF4g OBL IS
+OF
+
+@F
+
+2E
+
+a7
+
+47
+
+aF
+
+45
+
+aF
+
+54
+
+aF
+
+52
+
+22
+
+OF 68 OBL 16
+aF
+
+OF
+
+GE
+
+a4
+
+52
+
+OF
+
+4
+
+aa
+
+area OBL 17
+OF
+
+aF
+
+aE
+
+a6
+
+50
+
+OF
+
+49S
+
+OF
+
+54
+
+06
+
+aFoc OBL 18
+OF
+
+aF
+
+2E
+
+a6
+
+58
+
+OF
+
+49
+
+OF
+
+31
+
+32
+
+OFBS OBL19
+OF
+
+OF
+
+GE
+
+a6
+
+54
+
+M6808 MICRO ASSEMBLER
+
+FDB
+FCC
+FDR
+FCC
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+Foc
+FDB
+FCC
+FDB
+EQU
+FOB
+FDB
+FDB
+FDB
+Fcc
+FDB
+FCC
+FDB
+EQU
+FDB
+FDB
+FDB
+FDS
+Fcc
+FOB
+FCC
+FDB
+FCB
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+FCB
+FDB
+EQU
+FDS
+FDB
+FDB
+FDB
+FCC
+
+*+2
+/MB/
+*+2
+7ER/
+NIL
+*
+
+*#+4, OBL 16
+K+ELOEM R44
+SUBR ,*+4
+GREATR, NIL
+“GR/
+
+*+2
+
+SEA/
+
++2
+
+‘TES
+
+HAZ
+
+“RPS
+
+NIL
+
+*
+*+4,0BL17
+
+RAL LEMS REA
+
+SUBR ,*+4
+READ, NIL
+SRE/
+
+¥+2
+
+ZAD/
+
+NIL
+
+*
+*+4,0BL18
+H+1Q4M REG
+SUBR ,*+4
+PRINT, NIL
+/PR/
+
+*+2
+
+JIN
+
++2
+
+'T,F
+
+NIL
+
+*
+
+*+4, 0BL19
+H+ LEEM, RA
+SUBR,*+4
+PRINI,NIL
+/PR/
+
+*+2
+
+JENS
+
++2
+
+‘1,F
+
+NIL
+
+4
+
+x44, 0BL2 6
+H+ LZEM, REA
+SUBR ,*+4
+TERPRI,NIL
+‘TES
+PAGE 53 LISP M6882 MICRO ASSEMBLER
+
+6
+
+cae
+
+OFCA OF FDB #42 ;
+BFcC 52 Fcc 7RP/ o
+QFCE OF FDB +2
+@FDO 52 Fee PRIS
+OFD2 29 FDB NIL
+OFDA OBL29 = EQU *
+OFD4 OF FDB *+4,0BL21
+BFDB OF FDB A+LO+M HEY
+@FDC 3E FDB SUBR +4
+BFE 07 FDB RPLACA , NIL
+OFE4 52 Fcc /RP/
+OFE6 OF FDB +2
+@FEB 4C FCC Aas
+OFEA OF FDB a+2
+OFEC 43 Foc /CA/
+OFEE 22 FDB NIL
+OFF2 OBL2! Eau *
+OFFS OF FDB «+4, OBL22
+OFF4 12 FDB A+L2+M, REA
+OFFS OE FDB SUBR,*+4
+aFFC 37 FDB RPLACD, NIL -
+1206 52 FCC /RP/
+1222 12 FDB +2
+1934 4c Foc AAS .
+1806 12 FDB +2 .
+1328 43 FCC /CD/
+120A 22 FDB NIL ‘
+1aec OBL22 EQ *
+138C 19 FDB #44, 0BL23
+1312 12 FDB ALLE eA
+1814 OE FDB SUBR ,*+4
+1318 38 FEB EVAL, NIL
+1@1c 45 Foc 7EN/
+1S1E 12 FLB a+2
+1228 41 Fee /AL/
+1222 22 FDB NIL
+1224 OBL23 EGU *
+1924 12 FDB *+4,0BL24
+1928 12 FDB HF L2EM RHA
+122C GE FDB SUBR e+4
+1230 2 FLB APPLY , NIL
+1234 41 Foc ZAP /
+1236 12 FDB *+2
+1238 53 Fcc /PL/
+183A 12 FDB +2
+123C 59 FCB ‘YF sy
+123E 6 FDB NIL
+1249 CBL24 EQU * ‘
+124g 12 FDB *+4,OBL25 ‘,
+1244 12 FDB A+ 124M REG
+1248 GE FDB SUBR,*+4 :
+1240 28 FDB SASSOC,NIL ’
+1952 53 FCC ISAS .
+1252 12 FDB #42
+
+1954 53 Fcc “/SS/ ‘
+
+ 
+PAGE 54 LISP M6880 MICRO ASSEMBLER
+
+"1256 168 FDB +2
++1258 4F Foc /0C/
+. 135A 88 FDB NIL
+125 OBL25 EQU *
+1@5¢ 19 FDB *+4, 0BL26
+1062 13 FDB *+IL 24M *+4
+1064 OE FDB SUBR,*+4
+1268 28 FDB GET, NIL
+186C 47 FCC /GE/
+1a6E 18 FDB #42
+1272 54 FCB ‘T,F
+1272 90 FDB NIL
+1074 OBL26 = EQU *
+1974 12 FDB *+4,0BL27
+1278 10 FDB ALLZEM REA
+197C GE FLB SUBR ,#+4
+1882 2B FDB RETURN, NIL
+1284 52 FCC PRES
+1286 10 FDB *+2
+1288 54 Fcc /TUs
+128A 12 FDB #42
+” 1a8C 52 FCC RNS
+12gE a2 FDB NIL
+1994 OBL27 EU *
+©1290 12 FDB *+4,0BL28
+- 1294 19 FDB +L 2M REA
+1998 QE FDB SUBR +4
+*1@9C 26 FOB TEREAD, NIL
+LOAD 54 Foc /TE/
+12A2 12 FDB #42
+13A4 52 FCC MES
+1GA6 12 FDB *+2
+12A8 41 Fcc /AD/
+13AA 82 FDB NIL
+1BAC OBL28 EU *
+1gac 12 FDB *+4,0BL29
+12B@ 19 FDB *+12+M, +4
+18B4 @E FDB SUBR,*+4
+1288 8 FDB PLUS, NIL
+1aBC 59 FCC /PL/
+1@BE 19 FDB #+2
+1000 55 Fcc “s/
+18c2 ag FDB NIL
+1004 OBL29 EQU *
+12c4 10 FDB *+4, OBL 39
+188 1d FDB R+LZAM, REA
+12CC SE FDB SUBR,*+4
+. 19D2 ec FDB MINUS, NIL
+, 13D4 4b Fcc MIs
+1@D6 16 FDB *+2.
+.18D8 4E Fcc 7NU/
+,10DA 10 FDB +2
+_1ODC 53 FCB 's,F
+ISDE 26 FDB NIL
+
+. 1GE@ OBL32 EQU *
+
+ 
+PAGE 55° LISP
+
+LSFC OBL3!
+
+fiic OBL32
+
+1138 OBL 33
+
+1154 OBL34
+
+ag
+116¢ OBL35
+
+M682 MICRO ASSEMBLER
+
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+FCB
+FDB
+EQU
+FDB
+FDB
+FOB
+FDB
+FCC
+FDB
+FCC
+FDB
+FCC
+FDB
+FCC
+FDB
+EU
+FDB
+FDB
+FDB
+FOB
+FCC
+FDB
+FCC
+FDB
+FCC
+FDB
+EQu
+FDB
+FDB
+FDB
+FCB
+FCC
+FDB
+FCC
+FDB
+FCB
+FD3
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FOB
+FCC
+FOB
+EQu
+
+*+4,0BL 31
+A+ 124M, k+4
+SUBR ,*+4
+TIMES, NIL
+/TI/
+
+*+2
+
+SMES
+
+*+2
+
+'S,F
+
+NIL
+
+*
+
+*+4, OBL 32
+AEL2+M, RHA
+SUBR,*+4
+DIV, NIL
+/QU/
+
+KHZ
+
+/OT/
+
+*+2
+
+fIES
+
+*+2
+
+/NT/
+
+NIL
+
+*
+
+#+4,0BL33
+K+LZEM#+4
+SUBR,*+4
+READCH, NIL
+JRE/
+
+KAD
+
+/AD/
+
+REZ
+
+/CH/
+
+NIL
+
+*
+*+4,0BL34
+HEL O+M, +4
+SUBR ,*+4
+REACI, NIL
+PRES
+
++E
+
+7AD/
+
++2
+
+"LF
+
+NIL
+
+*
+
+*+4,0BL35
+KALZEM RG
+SUBR ,*+4
+OPEN, NIL
+7OP/
+
+*+2
+
+/EN/
+
+NIL
+
+*
+
+ 
+PAGE 56 LISP M6880 MICRO ASSEMBLER
+
+°
+116C 11 FDB *+4, 0BL36
+"4478 41 FOB R+LOtM #+4
+1174 BE FDB SUBR ,*+4
+1178 25 FDB CLOSE, NIL
+LL 7 43 Fcc SCL /
+LL7E LI FDB *+2
+1182 4F Fee /0S/
+1182 11 FDB A+D
+1184 45 FCB ‘EF
+1186 22 FDB NIL
+1188 OBL36 EQU *
+1188 11 FDB *+4,0BL37
+118C 11 FDB A+LOEM +4
+1198 OE FDB SUBR ,*+4
+1194 87 FDB PUTPRP, NIL
+1198 5@ Fec PPUS
+119A 11 FDB ¥#+2
+119¢ 54 Foc SIPS
+119E 11 FDB +2
+11A@ 52 Fcc ROS
+1ta2 LL FDB +2
+11A4 52 FCB 'P,F
+11A6 20 FDB NIL
+. 1148 OBL37 EQU *
+“11A8 11 FDB *+4,0BL40 “
+,itac tl FDB A+LOtM +a M4
+1132 GE FDB FSUBR,*+4
+11B4 67 FDB QUOTE, NIL v
+11B8 51 Fcc /QU/ 7
+1iBA 11 FDa x42 /
+LIBC 4F FCC OTS %
+1IBE 11 FDB *+20
+L1CB 45 FCB ‘E,F 7
+11C2 0a FDB NIL
+Lica OBL4S QU *
+1ic4 11 FDB ¥*+4,0BL41
+1iCg 11 FDB AFLOEM, REA
+11CC E FDB FSUBR,*+4
+11D2 2g FDB COND, NIL
+11D4 43 FCC /CO/
+i106 11 FDB *+2
+11D8 4E Fcc JND/
+1IDA 82 FDB NIL
+Linc OBL4! =EQU *
+,1iDG it FDB *+4,0BL42
+L1E@ 11 FDB #+LOHM, +4
+LEA GE FDB FSUBR +4
+. L1ES BA FDB EVLIS,NIL
+L1EC 4C FCC AIS
+‘LIEE 11 FDB *+2
+ell FO 53 Fcc /ST/
+-11F2 02 FDB NIL
+1lF4 OBL42 EQU *
+
+e1lF4 1) FDB *+4, OBL 43
+
+ 
+PAGE
+
+LL FB
+LiFC
+1288
+1264
+1296
+1208
+1204
+
+1220
+fale
+
+1214
+1218
+
+57 LISP
+
+12
+2E
+aB
+58
+12
+4F
+aa
+129c OBL43
+12
+12
+aE
+a7
+
+l21C 53
+
+12le
+
+12
+
+1222 54
+
+1222
+
+1224
+1228
+122c
+1233
+1234
+1236
+1238
+123A
+123C
+123E
+
+1243
+1244
+1248
+124C€
+12590
+1252
+1254
+1256
+
+22
+$224 OBL 44
+12
+12
+aE
+@7
+4l
+12
+4S
+12
+34
+a2
+1246 OBL 45
+le
+12
+OE
+a7
+46
+12
+4E
+12
+
+1258 54
+
+125A
+125
+1255
+
+1268
+1264
+1268
+1266
+1278
+1272
+
+1274
+
+O2225
+
+12
+4F
+28
+1268 OBL46
+12
+12
+3E
+6B
+47
+26
+1274 OBL 47
+8D
+
+1278 LISPSP
+ERRORS
+
+M6822 MICRO ASSEMBLER
+
+FDB
+FDB
+FDB
+Foc
+FDB
+FCC
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FDB
+FCC
+FDB
+Eau
+FDB
+FDB
+FDB
+FDB
+FCC
+PDS
+FCC
+FDS
+FCB
+FDB
+EQU
+FDB
+FOB
+FDB
+FOB
+FOC
+FDB
+FCC
+FDB
+FCC
+FOB
+Fcc
+FDB
+EQU
+FDB
+FDB
+FDB
+FDB
+FCC
+FOB
+EQU
+FDB
+
+Eau
+END
+
+H+LZ+M KA
+FSUBR,*+4
+PROG,NIL
+/PR/
+
+*+2
+
+/0G/
+
+NIL
+
+o*
+*+4,0BL44
++I ZAM, EA
+FSUBR,*+4
+SETQ, NIL
+/SE/
+
++2
+
+/TQ/
+
+NIL
+
+*
+
+*+4, OBL 45
+AFL ZHM, HEA
+FSUBR,*+4
+ALIST, NIL
+SAL /
+
+#42
+
+/1S/
+
+*+2
+
+‘TF
+
+NIL
+
+*
+
+*+4, OBL 46
++1 24M, *+4
+FSUBR, *+4
+FUNCTI,NIL
+
+SFUS
+
+*+2
+
+/NC/
+
++S
+
+/TI/
+
+*+2
+
+/ON/S
+
+NIL
+
+*
+*+4,0BL47
+*+1 24M, *+4
+FSUBR ,*+4
+GO,NIL
+/60/
+
+NIL
+
+*
+
+OBLIST, NIL
+
+*
+
+ 
+PAGE 58 LISP M6828 MICRO ASSEMBLER
+.
+"
+- AA.ER B761 AAMS @D27 AATOM 0547
+© ABORT 329D ABS 6C31 ABS1 2039
+*. ACIACS FF@Q ACIADA FF@1 ALIST 9756
+AP 8222 APPLY 2SCA APPLY! GAZA
+APPLY2 @9F2 APPLYS @SDA APVAL GEB4
+ARG] @614 ARG2 9016 ARG3 2018
+ARG? @7CA ARGLST 9992 ASSIGN O3F7
+ASSOCI 9888 ATOM @6DC BLDATM @5B 7
+BLONMB 0514 BQ @52B CAR Q759
+CCOUNT 8837 CDR @767 CELL B11
+CLOSE @5F9 CLRARG @99B CLRLOC @187
+CLRSTK @BBB COND @84E CONDI 9818
+CONS 876A CP 9632 CR @339
+CRLF @3B9 CURCEL 9812 DECI 2692
+DEC2 8695 DEC3 @6AE DEC4 Q6B5
+DECTBL @6C5 CEL @349 DELFLG BO34
+DELINE O2FE DEVI @4@E DEVICE 9835
+DEVTBL 6186 DIV aC62 DIVI 8C83
+Dive GC8F DIVSCL @CSE DONE @671
+DOT 2473 DUMMY 92C5 END @151
+» ENDATM B4CE EQ @7@2 EVAL @8B9
+EVALI @8C@ EVALS 98D7 EVAL4 9919
+EVAL6 @8F7 EVALS B94F EVALEX @8D6
+ EVLAMB @AGF EVLFNA @ASA EVLIS @ADC
+* EVLISX @B12 Ex @9C9 EXEX @3 4B
+- EXEX! BA22 EXFEX @91D EXFSBR 2976
+» EXPR @E54 EXPROG 0857 EXSBR e988
+EXSBRI @A12 F @282 FALSE Q6E1
+FATAL @44E FATALI @BA3 FEXPR GE6C
+FIRSTC 0238 FL.MS @D5B FN.ER 288A
+FN.ER, BAGF FN.MS @CF8 FNDLBL @B9a
+FORMS OD56 FREE @212 FSUBR GE38
+FULL 2232 FUNARG @E88 FUNCTI O737
+FWAM 0224 G2ABS @C18 GCOL @1D2
+6coL! @1E8 GCOL2 Zi FD GCOL3 G204
+GET 6856 GET2 @85D GET2N @BD4
+GET3 @869 GETARG @9A1 GETC G364
+GETCS 8429 GETIND @7D2 GO OBS4
+GO.ER @BA® GO.MS @D21 GO.PLY 96C
+GREATR 8728 GSUBR a9C7 HED ODs2
+1D.ER 2423 ID.MS @D74 IN.ER O51F
+IN.MS @DL3 INCK 239A INPSTR @3a2
+LABEL @BAE LAMBDA @DE8 LASTC QOFF
+LIMIT BOZA LISP @19C LISPSP 1278
+Loc @D94 LOCVAR @B31 LOOKUP 3874
+, “LWAM aeas M @601 MARKT 8242
+MARKS 8272 MARKEX @27E MARKL 22 3B
+' MATCH 8588 MINUS @CBS MP 292C
+> MRKATM @266 MRKNAM 2262 MRKNUM 22 6B
+MUL 2043 MUL2 BC49 MUL3 BC 4B
+N @OGE NA.ER B6CF NA.MS 2CDA
+« NAMNIL @D94 NATOM O4E1 NEG C34
++ NEXTC @38D NEXTCF O32A NIL 2002
+NNER OBF1 NN.ERZ @BED NN .MS @d2d
+
+* NOWARG S727 NO.IND 2892 NO.PRP O7F2
+
+ 
+PAGE 59 LISP M6892 MICRO ASSEMBLER
+
+¥
+i
+
+NOMTCH 2591 NORML @329 NOSP O37F ‘
+
+WULL Q6E7 NUMI 2024 NUM2 aa26 “
+
+NUMBER Q6E4 NXT2Cc @55F NXTCND 2844
+
+NXTDEV Q411 NXTDIG B4E9 NXTOBL 9552
+
+NXTST @B71 OBLI e0c4 OBLI2 GEDS
+
+OBLIL GEES OBLI2 @F26 OBL13 OF 1g
+
+OBLI4 SF2c OBLI5 OF 48 OBLI6 OF6S
+
+OBL17 OF82 OBLI8 @F9C OBLIS OFBS
+
+O8Le2 @DE4 OBL26 GFD4 OBL2t OFFS
+
+OBL22 128C OBL23 1924 OBL24 1648
+
+CBL25 195C OBL26 1874 OBL27 18923
+
+OBL28 {BAC OBL29 1804 OBL3 CECE
+
+OBL32 1ZE2 OBL3I 12FC CBL32 1lic
+
+OBL33 1138 OBL34 1154 OBL35 1i6c
+
+OBL 36 1188 OBL37 PIAS OBL4 @EIC
+
+OBL 43 1!c4 O8L41 1iDC OBL42 LiF4
+
+OBL 43 122C OBL44 1224 OBL45 1242
+
+OBL 46 1268 OBL47 1274 OBLS DE34
+
+CBL& @E5Z OBLT @E68 OBLS ZEB4
+
+OBLS 2EBS OBL9@ QEA@ OBLIST ODAC
+
+OBLSTB 238C OBLSTP’ @QlE ODD 95C 1
+
+ONALST 2885 OP G32 OPEN a5Fa
+
+CUTCH @38@ OUTCHI Q38F OV.ER 2 2B
+
+OV.MS @D3E PAIRLS GATE PLUS eBF?7 c
+
+PMESG1I 23AF PMESSG 23A5 PNAME 2225 .
+
+PNTARG @é6D2 POS @68C POSN @51C0 -
+
+PRCHAR 2665 PRINI 9651 PRINIE Q656 ‘
+
+PRINT @602 PRINT2 B62A PRINTS @615
+
+PRINT4 @61B PRINTS @639 PRINTS G64
+
+PRINT? 2643 PRINTE 2607 PRNMB O676
+
+PROG B13 PROG! @BS1 PROGB aZla
+
+PRPNIL BE9C PULLX @3E5 PUN FFI2
+
+PUNC FF13 PUNCLS @2EA PUNOPN 22Cr
+
+PUNOUT @2D6 PUSHX 2307 PUTIN ec AaB
+
+PUTBAK 2431 FPUTPRP @7D8 QUOTE e721
+
+RODATOM O4AD RDLIST 245B RDR FRI
+
+RDRC FF11 RORIN 02B@ RDROPN @206
+
+READ @437 READI 2498 READIE 249B
+
+READCH 2488 READE 0439 RECOVE BAC
+
+RETCND 6853 RETNIL 2377 RETPRG 2B 6C
+RETURN @BB7 RETVAL @BD! RPLACA BTTE
+
+RPLACD 3775 RSTART 2182 RSTR 173
+
+RSTRS 2CA5 RUNP @aIC S.END BATA
+
+S$ «EXPR 2454 SASSOC 2879 SAVEX 2028
+
+SEEK @146 SETAPV SIBF SET@ a787
+
+SHWDEL 235E SIGN 9331 SN.ER 2448 *
+
+SN.ERI 2495 SN.MS @CCE SO.MS ales
+
+SP 837D SPEC @8E1 SQUOTE 525 ‘
+STACK 2208 START @13@ STEPC BE3E .
+
+STKOVF 23DF STRES @C28 SUBR 22a
+
+SWEEP @22A SWPDON @228 SYSERR 8235
+
+T 2DCC T.PNAM @DES TA.ER BABE
+
+TEMPX 202A TEREAD Q6F7 TERPRI @6EF '
+TIMES 2C3A TLA.ER ACS TLA.MS eb4as .
+TMA WER S9BE TMA .MS QCEA TR B2AD ’
+
+ 
+PAGE 68 LISP M682@ MICRO ASSEMBLER
+
+“” TRAIL @2EE TRUE Q6EB TTYIN 82 7F
+- TTYOPN 8296 TTYOUT @28B VAREXH DAAB
+"XB 2413
+$DUPLEX, d3
+
+SCW,<€,1>;(DEF, FILL, J{DEF,COND,<(#1,#1,(DEF,#1,<° FDB #42
+
+FCB #1, F .
+>}(UPDATE,FILL,#1 J{DEF,[VAL, FILLJ,< FDB *+2 :
+
+FCC /#1/ .
+>](DEF,,1)}>) -
+{DEF,L,< FDB *+4,0BL#1
+
+FDB HEL OH, RHA
+
+FDB #3, +4
+
+FDS #2, NIL
+
+FCC 784s
+(COND, #5 1{ COND, #61{ COND, #7) FDB NIL
+OBL#1 — EQU >]
+
+CDEF,S,<{L,#1,#2,SUBR,#3,#4,#5 ,#61>)
+(DEF, F,<([L,#1,#2, FSUBR, #3, #4, #8, #6)>)
+
+ 
+
+{DEF,I,< FDB x44, OBL A
+#2 FDB AELZEM, +4
+FDB APVAL , +4
+FDB *-8, NIL
+FCC /43/
+(COND, #41{ COND, #5 1{ COND, #6} FDS NIL
+OBL#1 EQU >]
+OBLIST FDB *+LO+, RHA
+FDB APVAL, *+4 : -
+FDB OBL! , NIL
+FCC /0B/ ‘ oi t
+FDB #42 Cn ‘
+Fee ALI/ v .
+FDB ¥+2 fa _
+Foc /ST/ .
+FCB NIL -
+, OBL FDB NIL, #+4 eos Lk me
+{1,2 ,T ,T$) ‘ .
+
+{1,3 ,LAMBDA,LA,MB,DA)
+{1,4 ,APVAL,AP, VA,i)
+{1,5 ,SUBR ,SU,BR]
+(1,6 ,FSUBR,FS,UB,R]
+{1,7 ,EXPR ,EX,PRI
+[1,8 ,FEXPR,FE,XP,R}
+(1,92, FuNaRG, FU, NA,RG)
+
+SPC
+{5,9 ,ATOM, at, om)
+(5,10, CAR, CA,R1
+(5, 11,CDR,CD,R}
+18,12, CONS,CO,NS]
+(5,13, NULL, NU,LLJ
+{5,14,£Q,EQ}
+[S,15, NUMBER, NU,MB,ER)
+(S,16,GREATR,GR,EA, TE,RP)
+{S,17,READ,RE,AD}
+[5,18,PRINT,PR,IN,T} c
+{S,19,PRINI,PR,IN,1]
+(S,22,TERPRI ,TEyRP,R1}
+{5,21,RPLACA,RP,LA,CA)
+[S,22,RPLACD,RP.LA CD}
+15,23,EVAL,£V,AL}
+[S,24,APPLY ,AP,PL,Y}
+{S,25,SASS0C,SA,5S,0C)
+(S,26,GET,GE,T)
+{S,27,RETURN,RE, TURN)
+(S;28, TEREAD, TE,RE-ADI
+[5,29,PLUS,PL,US]
+[S,30,MINUS MI, NU,S)
+
+aS et pgerneeneenseseneeemnme se
+
