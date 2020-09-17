@@ -13,3 +13,7 @@ Original scans are in lisp15.pdf. Some pages have pencil notes made by Paul whic
 ### The original source code
 
 The file lisp.txt was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX os games disk.
+
+### The Dr. Dobbs original article
+
+The article was contributed by ka5kxw on Github., and was taken from the September 1978 issue of Dr. Dobbs. Ot had Frits' description of his lisp system along with a handy definition of DEF for the interpreter.
