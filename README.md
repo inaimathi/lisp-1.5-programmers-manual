@@ -8,4 +8,8 @@ This is as direct a reproduction as I could manage of the LISP 1.5 programmers m
 
 The complete manual came on ~60 physical pages at a maximum of 64 fairly sparse lines per page, so I decided it would be easier to just re-type rather than deal with OCR issues. Also, I'm fucking bored. Let me know if you've caught an error.
 
-Original scans are kept in the `scans/` sub-directory. Some pages have pencil notes made by Paul which I will not transcribe. If you want to transcribe some in parallel with me, feel free. As of this writing, I'm up to file `009.tif`.
+Original scans are in lisp15.pdf. Some pages have pencil notes made by Paul which are not transcribed. 
+
+### The original source code
+
+The file lisp.txt was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX os games disk.
