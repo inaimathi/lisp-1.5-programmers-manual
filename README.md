@@ -12,7 +12,7 @@ Original scans are in lisp15.pdf. Some pages have pencil notes made by Paul whic
 
 ### The source code
 
-The file lisp.asm was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX os games disk. Some obvious typos in the code have been corrected, but it has not been verified that it actually is the code, and there are probably more errors.
+The file lisp.asm was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX O/S games disk. Some obvious typos in the code have been corrected. A reasonable effort has been made to verify the code on a 6800 emulator and some additional issues has been corrected. There may be more errors.
 
 ### The Dr. Dobbs original article
 
