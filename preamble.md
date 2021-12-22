@@ -157,7 +157,10 @@ I hope you will enjoy LISP.
 
 And if any problems with LISP are encountered, or when you have any suggestions for improvements, which can be implemented in a next version, please let me know.
 
-> Frits van der Wateren
-> van 't Hoffstraat 140
-> NL 2014 RK Haarlem
-> The Netherlands
+  Frits van der Wateren
+  
+  van 't Hoffstraat 140
+  
+  NL 2014 RK Haarlem
+  
+  The Netherlands
