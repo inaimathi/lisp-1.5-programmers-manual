@@ -12,8 +12,8 @@ Original scans are in lisp15.pdf. Some pages have pencil notes made by Paul whic
 
 ### The source code
 
-The file lisp.asm was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX O/S games disk. Some obvious typos in the code have been corrected. A reasonable effort has been made to verify the code on a 6800 emulator and some additional issues has been corrected. There may be more errors.
+The file lisp.asm was contributed by guitarvydas on Github. Thanks to Kendal Goodson for this lates copy (LISP.TXT). "As Is", found on a FLEX O/S games disk. Some obvious typos in the code have been corrected. User egilkv on Github has made a reasonable effort to verify the code on a 6800 emulator, and found a few additional issues that have been corrected. He verified that the interpreter executes correctly in a number of test cases, but does not rule out there may be more errors.
 
 ### The Dr. Dobbs original article
 
-The article was contributed by ka5kxw on Github., and was taken from the September 1978 issue of Dr. Dobbs. Ot had Frits' description of his lisp system along with a handy definition of DEF for the interpreter.
+The article was contributed by ka5kxw on Github, and was taken from the September 1978 issue of Dr. Dobbs. It had Frits' description of his lisp system along with a handy definition of DEF for the interpreter.
