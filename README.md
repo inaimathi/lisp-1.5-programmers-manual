@@ -1,5 +1,5 @@
 # Lisp 1.5 Programmers' Manual
-###### COPY RIGHT 1978 by:
+###### COPYRIGHT 1978 by:
 ###### FRITS VAN DER WATEREN
 
 ### Note from the typist
